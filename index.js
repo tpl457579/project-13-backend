@@ -13,11 +13,11 @@ const app = express()
 connectDB()
 
 app.use(express.json())
-/* 
-app.use(
+
+/* app.use(
   cors({
     origin:
-      'https://starlit-semolina-e24ea6.netlify.app/' || 'http://localhost:3000' 
+      'https://starlit-semolina-e24ea6.netlify.app/' || 'http://localhost:3000'
   })
 ) */
 app.use(
