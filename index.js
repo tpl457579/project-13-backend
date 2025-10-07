@@ -6,7 +6,7 @@ import cors from 'cors'
 import { connectDB } from './src/config/db.js'
 import productsRouter from './src/api/routes/products.js'
 import usersRouter from './src/api/routes/users.js'
-import './src/utils/cron.js'
+import './cron.js'
 
 const app = express()
 

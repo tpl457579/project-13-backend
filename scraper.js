@@ -128,6 +128,5 @@ export const scrapeProducts = async () => {
     await browser.close()
     await mongoose.disconnect()
     console.log('Scrape finished, DB connection closed')
-    process.exit(0)
   }
 }

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "scrape": "node scraper.js"
+    "start-cron": "node cron.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",
