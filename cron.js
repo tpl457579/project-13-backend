@@ -4,15 +4,20 @@ import mongoose from 'mongoose'
 import { scrapeProducts } from './scraper.js'
 import { cleanupFavourites } from './src/api/controllers/products.js'
 
+console.log('Connecting to MongoDB...')
 await mongoose.connect(process.env.MONGO_URI)
+console.log('Connected to MongoDB')
 
 cron.schedule('0 2 * * *', async () => {
   try {
     console.log(`[${new Date().toISOString()}] Running scheduled tasks...`)
     await scrapeProducts()
     await cleanupFavourites()
-    console.log('Scheduled tasks completed')
+    console.log('Tasks completed')
   } catch (err) {
-    console.error('Cron job failed:', err.message)
+    console.error('Tasks failed:', err.message)
   }
 })
+
+console.log('Cron job scheduled. Waiting for execution...')
+setInterval(() => {}, 1000 * 60 * 60)

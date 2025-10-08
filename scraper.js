@@ -126,7 +126,6 @@ export const scrapeProducts = async () => {
     console.error('Scrape error:', err.message)
   } finally {
     await browser.close()
-    await mongoose.disconnect()
     console.log('Scrape finished, DB connection closed')
   }
 }
