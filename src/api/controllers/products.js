@@ -98,14 +98,16 @@ export const deleteProduct = async (req, res) => {
 
 export const cleanupFavourites = async () => {
   const users = await User.find()
-  for (let user of users) {
-    const validIds = []
-    for (let favId of user.favourites) {
-      const exists = await Product.exists({ _id: favId })
-      if (exists) validIds.push(favId)
-    }
-    if (validIds.length !== user.favourites.length) {
-      user.favourites = validIds
+  for (const user of users) {
+    const validIds = await Promise.all(
+      user.favourites.map(async (favId) => {
+        const exists = await Product.exists({ _id: favId })
+        return exists ? favId : null
+      })
+    )
+    const filtered = validIds.filter(Boolean)
+    if (filtered.length !== user.favourites.length) {
+      user.favourites = filtered
       await user.save()
     }
   }

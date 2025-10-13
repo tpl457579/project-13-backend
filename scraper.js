@@ -5,8 +5,6 @@ import { cloudinary } from './src/middlewares/file.js'
 import * as cheerio from 'cheerio'
 import 'dotenv/config'
 
-await mongoose.connect(process.env.MONGO_URI)
-
 export const scrapeProducts = async () => {
   console.log('Scrape started...')
 
