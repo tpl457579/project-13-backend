@@ -11,15 +11,26 @@ console.log('Connected to MongoDB')
 cron.schedule('0 2 * * *', () => {
   ;(async () => {
     try {
-      console.log(`[${new Date().toISOString()}] Running scheduled tasks...`)
+      console.log(`[${new Date().toISOString()}] Running scrapeProducts`)
       await scrapeProducts()
-      await cleanupFavourites()
-      console.log('Tasks completed')
+      console.log('scrapeProducts completed')
     } catch (err) {
-      console.error('Tasks failed:', err.message)
+      console.error('scrapeProducts failed:', err.message)
     }
   })()
 })
 
-console.log('Cron job scheduled to run at 2:00 AM daily')
+cron.schedule('0 4 * * *', () => {
+  ;(async () => {
+    try {
+      console.log(`[${new Date().toISOString()}] Running cleanupFavourites`)
+      await cleanupFavourites()
+      console.log('cleanupFavourites completed')
+    } catch (err) {
+      console.error('cleanupFavourites failed:', err.message)
+    }
+  })()
+})
+
+console.log('Cron jobs scheduled for 2AM and 4AM')
 setInterval(() => {}, 1000 * 60 * 60)
