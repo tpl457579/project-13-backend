@@ -33,4 +33,4 @@ cron.schedule('0 4 * * *', () => {
 })
 
 console.log('Cron jobs scheduled for 2AM and 4AM')
-setInterval(() => {}, 1000 * 60 * 60)
+process.stdin.resume()
