@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer'
-import Product from './src/api/models/products.js'
-import { cloudinary } from './src/middlewares/file.js'
+import Product from '../api/models/products.js'
+import { cloudinary } from '../middlewares/file.js'
 import * as cheerio from 'cheerio'
 import 'dotenv/config'
 

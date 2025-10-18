@@ -6,7 +6,7 @@ import cors from 'cors'
 import { connectDB } from './src/config/db.js'
 import productsRouter from './src/api/routes/products.js'
 import usersRouter from './src/api/routes/users.js'
-import './cron.js'
+import './src/utils/cron.js'
 
 const app = express()
 
@@ -14,12 +14,6 @@ connectDB()
 
 app.use(express.json())
 
-/* app.use(
-  cors({
-    origin:
-      'https://starlit-semolina-e24ea6.netlify.app/' || 'http://localhost:3000'
-  })
-) */
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN || '*'

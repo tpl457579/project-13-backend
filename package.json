@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "start-cron": "node cron.js"
+    "start-cron": "node src/utils/cron.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",
@@ -39,7 +39,9 @@
     "rollup": "^4.48.1",
     "source-map-js": "^1.2.1",
     "streamifier": "^0.1.1",
-    "tinyglobby": "^0.2.14"
+    "tinyglobby": "^0.2.14",
+    "winston": "^3.18.3",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "keywords": [],
   "author": "",

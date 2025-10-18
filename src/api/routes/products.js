@@ -2,7 +2,7 @@ import express from 'express'
 import { isAuth } from '../../middlewares/auth.js'
 import { isAdmin } from '../../middlewares/adminAuth.js'
 import uploadImage from '../../middlewares/file.js'
-import { scrapeProducts } from '../../../scraper.js'
+import { scrapeProducts } from '../../utils/scraper.js'
 import { saveProduct } from '../controllers/products.js'
 
 import {
