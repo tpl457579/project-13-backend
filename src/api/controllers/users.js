@@ -76,11 +76,6 @@ export const register = async (req, res) => {
   } catch (error) {
     console.error('Register error:', error)
 
-    if (error.code === 11000) {
-      const field = Object.keys(error.keyPattern)[0]
-      return res.status(400).json({ message: `That ${field} is already taken` })
-    }
-
     res
       .status(500)
       .json({ message: 'Registration failed', error: error.message })

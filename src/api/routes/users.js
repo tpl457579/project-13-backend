@@ -13,7 +13,6 @@ import {
 
 const usersRouter = Router()
 
-// Public routes
 usersRouter.post('/register', register)
 usersRouter.post('/login', login)
 

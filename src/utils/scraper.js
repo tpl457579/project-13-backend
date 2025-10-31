@@ -8,9 +8,9 @@ export const scrapeProducts = async () => {
   console.log('Scrape started...')
 
   const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox'],
-    defaultViewport: { width: 1366, height: 900 }
+    headless: true
+    /* args: ['--no-sandbox'],
+    defaultViewport: { width: 1366, height: 900 } */
   })
   const page = await browser.newPage()
   await page.setExtraHTTPHeaders({
