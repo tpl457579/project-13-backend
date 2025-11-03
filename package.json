@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "scrape": "node src/utils/scraper.js",
     "start-cron": "node src/utils/cron.js"
   },
   "devDependencies": {
@@ -35,7 +36,7 @@
     "picocolors": "^1.1.1",
     "picomatch": "^4.0.3",
     "postcss": "^8.5.6",
-    "puppeteer": "^24.22.0",
+    "puppeteer": "^24.27.0",
     "rollup": "^4.48.1",
     "source-map-js": "^1.2.1",
     "streamifier": "^0.1.1",

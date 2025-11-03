@@ -1,17 +1,13 @@
+import 'dotenv/config'
 import puppeteer from 'puppeteer'
 import Product from '../api/models/products.js'
 import { cloudinary } from '../middlewares/file.js'
 import * as cheerio from 'cheerio'
-import 'dotenv/config'
 
 export const scrapeProducts = async () => {
   console.log('Scrape started...')
 
-  const browser = await puppeteer.launch({
-    headless: true
-    /* args: ['--no-sandbox'],
-    defaultViewport: { width: 1366, height: 900 } */
-  })
+  const browser = await puppeteer.launch({ headless: true })
   const page = await browser.newPage()
   await page.setExtraHTTPHeaders({
     'User-Agent':
@@ -37,34 +33,28 @@ export const scrapeProducts = async () => {
 
     const html = await page.content()
     const $ = cheerio.load(html)
-
     const products = []
+
     $('div[data-component-type="s-search-result"]').each((_, el) => {
       const asin = $(el).attr('data-asin')
       const name = $(el).find('h2 span').text().trim()
-
       const rawUrl = $(el).find('a.a-link-normal.s-no-outline').attr('href')
       const productUrl = rawUrl?.startsWith('http')
         ? rawUrl
         : rawUrl
         ? `https://www.amazon.ie${rawUrl}`
         : null
-
       const imageUrl = $(el).find('img.s-image').attr('src')
       const ratingText = $(el).find('span.a-icon-alt').text().trim()
-
       const rawWhole = $(el).find('span.a-price-whole').text().trim()
       const rawFraction = $(el).find('span.a-price-fraction').text().trim()
-
       const cleanWhole = rawWhole.replace(/[^\d]/g, '') || '0'
       const cleanFraction = rawFraction.replace(/[^\d]/g, '') || '00'
-
       const priceWhole = Number(cleanWhole)
       const priceFraction = Number(cleanFraction)
       const price = parseFloat(
         `${priceWhole}.${priceFraction.toString().padStart(2, '0')}`
       )
-
       const rating = ratingText ? parseFloat(ratingText) : null
 
       products.push({
@@ -125,4 +115,16 @@ export const scrapeProducts = async () => {
     await browser.close()
     console.log('Scrape finished, DB connection closed')
   }
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  scrapeProducts()
+    .then(() => {
+      console.log('Scraping completed successfully.')
+      process.exit(0)
+    })
+    .catch((err) => {
+      console.error('Scraping failed:', err)
+      process.exit(1)
+    })
 }
