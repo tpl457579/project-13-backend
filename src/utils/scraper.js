@@ -1,11 +1,14 @@
 import 'dotenv/config'
 import puppeteer from 'puppeteer'
+import mongoose from 'mongoose'
 import Product from '../api/models/products.js'
 import { cloudinary } from '../middlewares/file.js'
 import * as cheerio from 'cheerio'
 
 export const scrapeProducts = async () => {
   console.log('Scrape started...')
+
+  await mongoose.connect(process.env.MONGO_URI)
 
   const browser = await puppeteer.launch({ headless: true })
   const page = await browser.newPage()
