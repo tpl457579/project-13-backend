@@ -1,7 +1,6 @@
 import express from 'express'
 import { isAuth } from '../../middlewares/auth.js'
 import { isAdmin } from '../../middlewares/adminAuth.js'
-import { chromium } from 'playwright'
 import {
   saveProduct,
   getProducts,
@@ -11,46 +10,53 @@ import {
 
 const productsRouter = express.Router()
 
+import axios from 'axios'
+import * as cheerio from 'cheerio'
+
 productsRouter.post('/fetch-metadata', async (req, res) => {
+  console.log('Incoming body:', req.body)
   const url = req.body?.url?.trim()
   if (!url) return res.status(400).json({ error: 'URL is required' })
 
-  let browser
   try {
-    browser = await chromium.launch({ headless: true })
-    const context = await browser.newContext({
-      userAgent:
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
+    // Fetch the HTML
+    const response = await axios.get(url, {
+      headers: {
+        // Pretend to be a browser
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
+      }
     })
-    const page = await context.newPage()
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
 
-    try {
-      await page.click('#onetrust-accept-btn-handler', { timeout: 5000 })
-    } catch {}
+    const html = response.data
+    const $ = cheerio.load(html)
 
-    const name =
-      (await page.textContent('h1'))?.trim() || (await page.title()) || ''
+    // Extract product name
+    const name = $('h1').first().text().trim() || $('title').text().trim() || ''
+
+    // Extract image URL
     const imageUrl =
-      (await page.getAttribute('#landingImage', 'src')) ||
-      (await page.getAttribute('#landingImage', 'data-old-hires')) ||
-      (await page.getAttribute('#imgTagWrapperId img', 'src')) ||
+      $('#landingImage').attr('src') ||
+      $('#landingImage').attr('data-old-hires') ||
+      $('#imgTagWrapperId img').attr('src') ||
       ''
+
+    // Extract price
     let price = null
     const priceText =
-      (await page.textContent('.a-price .a-offscreen')) ||
-      (await page.textContent('#priceblock_ourprice')) ||
-      (await page.textContent('#priceblock_dealprice')) ||
+      $('.a-price .a-offscreen').first().text().trim() ||
+      $('#priceblock_ourprice').text().trim() ||
+      $('#priceblock_dealprice').text().trim() ||
       null
-    if (priceText)
+
+    if (priceText) {
       price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.'))
+    }
 
     res.json({ name, imageUrl, price })
   } catch (err) {
     console.error('Metadata error:', err)
     res.status(500).json({ error: 'Failed to fetch metadata' })
-  } finally {
-    if (browser) await browser.close()
   }
 })
 
