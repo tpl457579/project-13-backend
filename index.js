@@ -1,6 +1,5 @@
 import dotenv from 'dotenv'
 dotenv.config()
-
 import express from 'express'
 import cors from 'cors'
 import { connectDB } from './src/config/db.js'
@@ -20,6 +19,8 @@ app.use(
   })
 )
 app.use('/api/v1/products', productsRouter)
+console.log('USING PRODUCTS ROUTER')
+
 app.use('/api/v1/users', usersRouter)
 
 app.get('/', (req, res) => {

@@ -6,6 +6,26 @@ import {
   uploadImageFromUrl
 } from '../../utils/cloudinaryHelper.js'
 
+import puppeteer from 'puppeteer'
+import * as cheerio from 'cheerio'
+
+import { fetchMetadata as scrapeMetadata } from '../../utils/fetchMetaData.js'
+
+export const fetchMetadata = async (req, res) => {
+  const { url } = req.body
+  if (!url) return res.status(400).json({ error: 'URL is required' })
+
+  try {
+    const metadata = await scrapeMetadata(url)
+    res.json(metadata)
+  } catch (err) {
+    console.error('Fetch metadata error:', err)
+    res
+      .status(500)
+      .json({ error: 'Failed to fetch metadata', details: err.message })
+  }
+}
+
 export const getProducts = async (req, res) => {
   try {
     const { size, maxPrice, minRating } = req.query
@@ -37,44 +57,41 @@ export const getProductById = async (req, res) => {
 }
 
 export const saveProduct = async (req, res) => {
+  console.log('Received request body:', req.body)
+
+  const { _id, name, price, description, imageUrl, publicId, url } = req.body
+
+  if (!name || !price) {
+    console.warn('Missing required fields:', { name, price })
+    return res.status(400).json({ error: 'Name and price are required' })
+  }
+
   try {
-    const { id, name, price, description, imageUrl, publicId } = req.body
-
     let product
-
-    if (id) {
-      product = await Product.findById(id)
-      if (!product)
-        return res.status(404).json({ message: 'Product not found' })
-
-      if (imageUrl && publicId && product.imagePublicId !== publicId) {
-        if (product.imagePublicId) {
-          await cloudinary.uploader.destroy(product.imagePublicId)
-        }
-        product.imageUrl = imageUrl
-        product.imagePublicId = publicId
-      }
-
-      product.name = name ?? product.name
-      product.price = price ?? product.price
-      product.description = description ?? product.description
-
-      await product.save()
+    if (_id) {
+      console.log('Updating existing product with ID:', _id)
+      product = await Product.findByIdAndUpdate(
+        _id,
+        { name, price, description, imageUrl, publicId, url },
+        { new: true, runValidators: true }
+      )
     } else {
+      console.log('Creating new product')
       product = await Product.create({
         name,
-        price,
+        price: Number(price),
         description,
         imageUrl,
-        imagePublicId: publicId
+        publicId,
+        url
       })
     }
 
-    res.status(200).json({ message: 'Product saved', product })
+    console.log('Product saved successfully:', product)
+    res.json({ product })
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: 'Failed to save product', error: err.message })
+    console.error('Error saving product:', err)
+    res.status(500).json({ error: 'Failed to save product' })
   }
 }
 
