@@ -82,41 +82,37 @@ export const getProductById = async (req, res) => {
 }
 
 export const saveProduct = async (req, res) => {
-  console.log('Received request body:', req.body)
-
-  const { _id, name, price, description, imageUrl, publicId, url } = req.body
-
-  if (!name || !price) {
-    console.warn('Missing required fields:', { name, price })
-    return res.status(400).json({ error: 'Name and price are required' })
-  }
+  console.log('Incoming save body:', req.body)
 
   try {
+    const { _id, name, price, description, imageUrl, publicId, url } = req.body
     let product
+
     if (_id) {
-      console.log('Updating existing product with ID:', _id)
       product = await Product.findByIdAndUpdate(
         _id,
-        { name, price, description, imageUrl, publicId, url },
-        { new: true, runValidators: true }
+        { name, price, description, imageUrl, imagePublicId: publicId, url },
+        { new: true }
       )
     } else {
-      console.log('Creating new product')
-      product = await Product.create({
+      product = new Product({
         name,
-        price: Number(price),
+        price,
         description,
         imageUrl,
-        publicId,
+        imagePublicId: publicId,
         url
       })
+      await product.save()
     }
 
-    console.log('Product saved successfully:', product)
+    if (!product) return res.status(404).json({ error: 'Product not found' })
     res.json({ product })
   } catch (err) {
-    console.error('Error saving product:', err)
-    res.status(500).json({ error: 'Failed to save product' })
+    console.error('Save product error:', err)
+    res
+      .status(500)
+      .json({ error: 'Failed to save product', details: err.message })
   }
 }
 
