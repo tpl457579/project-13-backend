@@ -1,7 +1,6 @@
 import mongoose from 'mongoose'
 
 const productSchema = new mongoose.Schema({
-  asin: { type: String, index: true },
   name: String,
   url: String,
   imageUrl: String,
