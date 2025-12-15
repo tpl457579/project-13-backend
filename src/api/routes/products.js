@@ -47,8 +47,13 @@ productsRouter.post('/fetch-metadata', async (req, res) => {
     if (priceText) {
       price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.'))
     }
+    let rating = null
+    const ratingText = $('.a-icon-alt').first().text().trim()
+    if (ratingText) {
+      rating = parseFloat(ratingText.replace(/[^\d.]/g, ''))
+    }
 
-    res.json({ name, imageUrl, price })
+    res.json({ name, imageUrl, price, rating })
   } catch (err) {
     console.error('Metadata error:', err)
     res.status(500).json({ error: 'Failed to fetch metadata' })
