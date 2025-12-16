@@ -1,53 +1,53 @@
 import Product from '../models/products.js'
 import User from '../models/users.js'
 import { cloudinary } from '../../middlewares/file.js'
-import axios from 'axios'
+import puppeteer from 'puppeteer'
 import * as cheerio from 'cheerio'
 
-export const fetchMetadata = async (req, res) => {
+// Express route handler: POST /products/scrape-single
+export const scrapeSingle = async (req, res) => {
   const { url } = req.body
   if (!url) return res.status(400).json({ error: 'URL is required' })
 
-  try {
-    // Fetch the HTML
-    const response = await axios.get(url, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
-      }
-    })
+  const browser = await puppeteer.launch({ headless: true })
+  const page = await browser.newPage()
+  await page.setExtraHTTPHeaders({
+    'User-Agent':
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
+  })
 
-    const html = response.data
+  try {
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 })
+    const html = await page.content()
     const $ = cheerio.load(html)
 
-    // Extract product name
     const name = $('h1').first().text().trim() || $('title').text().trim() || ''
-
-    // Extract image URL
     const imageUrl =
       $('#landingImage').attr('src') ||
       $('#landingImage').attr('data-old-hires') ||
       $('#imgTagWrapperId img').attr('src') ||
       ''
-
-    // Extract price
-    let price = null
     const priceText =
       $('.a-price .a-offscreen').first().text().trim() ||
       $('#priceblock_ourprice').text().trim() ||
       $('#priceblock_dealprice').text().trim() ||
       null
+    const price = priceText
+      ? parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.'))
+      : null
 
-    if (priceText) {
-      price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.'))
-    }
+    const ratingText = $('span.a-icon-alt').first().text().trim()
+    const rating = ratingText
+      ? parseFloat(ratingText.replace(/[^0-9.]/g, ''))
+      : null
 
-    res.json({ name, imageUrl, price })
+    res.json({ name, imageUrl, price, rating, url })
   } catch (err) {
-    console.error('Fetch metadata error:', err)
     res
       .status(500)
-      .json({ error: 'Failed to fetch metadata', details: err.message })
+      .json({ error: 'Failed to scrape product', details: err.message })
+  } finally {
+    await browser.close()
   }
 }
 
@@ -82,16 +82,23 @@ export const getProductById = async (req, res) => {
 }
 
 export const saveProduct = async (req, res) => {
-  console.log('Incoming save body:', req.body)
-
   try {
-    const { _id, name, price, description, imageUrl, publicId, url } = req.body
+    const { _id, name, price, description, imageUrl, publicId, url, rating } =
+      req.body
     let product
 
     if (_id) {
       product = await Product.findByIdAndUpdate(
         _id,
-        { name, price, description, imageUrl, imagePublicId: publicId, url },
+        {
+          name,
+          price,
+          description,
+          imageUrl,
+          imagePublicId: publicId,
+          url,
+          rating
+        },
         { new: true }
       )
     } else {
@@ -101,7 +108,8 @@ export const saveProduct = async (req, res) => {
         description,
         imageUrl,
         imagePublicId: publicId,
-        url
+        url,
+        rating
       })
       await product.save()
     }

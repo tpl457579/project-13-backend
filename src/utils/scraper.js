@@ -48,7 +48,8 @@ export const scrapeProducts = async () => {
         ? `https://www.amazon.ie${rawUrl}`
         : null
       const imageUrl = $(el).find('img.s-image').attr('src')
-      const ratingText = $(el).find('span.a-icon-alt').text().trim()
+      const ratingText = $(el).find('span.a-icon-alt').first().text().trim()
+
       const rawWhole = $(el).find('span.a-price-whole').text().trim()
       const rawFraction = $(el).find('span.a-price-fraction').text().trim()
       const cleanWhole = rawWhole.replace(/[^\d]/g, '') || '0'
@@ -59,7 +60,9 @@ export const scrapeProducts = async () => {
         `${priceWhole}.${priceFraction.toString().padStart(2, '0')}`
       )
       const rating = ratingText ? parseFloat(ratingText) : null
-
+      console.log(
+        `ASIN: ${asin}, Name: ${name}, RatingText: "${ratingText}", Rating: ${rating}`
+      )
       products.push({
         asin,
         name,
