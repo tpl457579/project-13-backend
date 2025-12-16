@@ -7,17 +7,25 @@ import * as cheerio from 'cheerio'
 // Express route handler: POST /products/scrape-single
 export const scrapeSingle = async (req, res) => {
   const { url } = req.body
+  console.log('Incoming scrape request:', req.body) // <-- log body
   if (!url) return res.status(400).json({ error: 'URL is required' })
 
-  const browser = await puppeteer.launch({ headless: true })
-  const page = await browser.newPage()
-  await page.setExtraHTTPHeaders({
-    'User-Agent':
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
-  })
-
+  let browser
   try {
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    })
+
+    const page = await browser.newPage()
+    await page.setExtraHTTPHeaders({
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
+    })
+
+    console.log('Navigating to:', url)
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 })
+
     const html = await page.content()
     const $ = cheerio.load(html)
 
@@ -41,13 +49,15 @@ export const scrapeSingle = async (req, res) => {
       ? parseFloat(ratingText.replace(/[^0-9.]/g, ''))
       : null
 
+    console.log({ name, imageUrl, price, rating })
     res.json({ name, imageUrl, price, rating, url })
   } catch (err) {
+    console.error('Scrape error:', err)
     res
       .status(500)
       .json({ error: 'Failed to scrape product', details: err.message })
   } finally {
-    await browser.close()
+    if (browser) await browser.close()
   }
 }
 
@@ -63,9 +73,10 @@ export const getProducts = async (req, res) => {
     const products = await Product.find(query)
     res.json(products)
   } catch (err) {
+    console.error('Scrape error:', err) // <-- log full error
     res
       .status(500)
-      .json({ message: 'Failed to fetch products', error: err.message })
+      .json({ error: 'Failed to scrape product', details: err.message })
   }
 }
 
