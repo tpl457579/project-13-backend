@@ -6,12 +6,12 @@ import {
   getProducts,
   getProductById,
   deleteProduct,
-  scrapeSingle
+  fetchMetadata
 } from '../controllers/products.js'
 
 const productsRouter = express.Router()
 
-productsRouter.post('/scrape-single', scrapeSingle)
+productsRouter.post('/fetch-metadata', fetchMetadata)
 
 productsRouter.get('/', getProducts)
 productsRouter.get('/:id', getProductById)

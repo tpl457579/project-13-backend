@@ -1,32 +1,22 @@
 import Product from '../models/products.js'
 import User from '../models/users.js'
 import { cloudinary } from '../../middlewares/file.js'
-import puppeteer from 'puppeteer'
+import axios from 'axios'
 import * as cheerio from 'cheerio'
 
-// Express route handler: POST /products/scrape-single
-export const scrapeSingle = async (req, res) => {
+export const fetchMetadata = async (req, res) => {
   const { url } = req.body
-  console.log('Incoming scrape request:', req.body) // <-- log body
   if (!url) return res.status(400).json({ error: 'URL is required' })
 
-  let browser
   try {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
+      }
     })
 
-    const page = await browser.newPage()
-    await page.setExtraHTTPHeaders({
-      'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
-    })
-
-    console.log('Navigating to:', url)
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 })
-
-    const html = await page.content()
+    const html = response.data
     const $ = cheerio.load(html)
 
     const name = $('h1').first().text().trim() || $('title').text().trim() || ''
@@ -35,29 +25,29 @@ export const scrapeSingle = async (req, res) => {
       $('#landingImage').attr('data-old-hires') ||
       $('#imgTagWrapperId img').attr('src') ||
       ''
+
+    let price = null
     const priceText =
       $('.a-price .a-offscreen').first().text().trim() ||
       $('#priceblock_ourprice').text().trim() ||
       $('#priceblock_dealprice').text().trim() ||
       null
-    const price = priceText
-      ? parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.'))
-      : null
+    if (priceText) {
+      price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.'))
+    }
 
+    let rating = null
     const ratingText = $('span.a-icon-alt').first().text().trim()
-    const rating = ratingText
-      ? parseFloat(ratingText.replace(/[^0-9.]/g, ''))
-      : null
+    if (ratingText) {
+      const parsed = parseFloat(ratingText)
+      if (!isNaN(parsed)) rating = parsed
+    }
 
-    console.log({ name, imageUrl, price, rating })
-    res.json({ name, imageUrl, price, rating, url })
+    res.json({ name, imageUrl, price, rating })
   } catch (err) {
-    console.error('Scrape error:', err)
     res
       .status(500)
-      .json({ error: 'Failed to scrape product', details: err.message })
-  } finally {
-    if (browser) await browser.close()
+      .json({ error: 'Failed to fetch metadata', details: err.message })
   }
 }
 
@@ -73,10 +63,9 @@ export const getProducts = async (req, res) => {
     const products = await Product.find(query)
     res.json(products)
   } catch (err) {
-    console.error('Scrape error:', err) // <-- log full error
     res
       .status(500)
-      .json({ error: 'Failed to scrape product', details: err.message })
+      .json({ message: 'Failed to fetch products', error: err.message })
   }
 }
 
