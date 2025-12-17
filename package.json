@@ -7,7 +7,8 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "scrape": "node src/utils/scraper.js",
-    "start-cron": "node src/utils/cron.js"
+    "start-cron": "node src/utils/cron.js",
+    "postinstall": "npx puppeteer browsers install chrome"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",

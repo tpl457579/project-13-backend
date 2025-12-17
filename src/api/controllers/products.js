@@ -12,7 +12,7 @@ export const scrapeSingle = async (req, res) => {
 
   let browser
   try {
-    browser = await puppeteer.launch({
+    const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     })
