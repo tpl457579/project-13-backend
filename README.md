@@ -1,6 +1,6 @@
 # Backend Specifics
 
-- Deployment Url - https://project-13-backend.onrender.com/
+- Deployment Url - https://project-13-backend-1sra.onrender.com/
 
 ### Technologies Used
 
