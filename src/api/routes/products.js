@@ -15,8 +15,8 @@ productsRouter.post('/fetch-metadata', fetchMetadata)
 
 productsRouter.get('/', getProducts)
 productsRouter.get('/:id', getProductById)
-productsRouter.post('/save', saveProduct)
-productsRouter.put('/save/:id', saveProduct)
+productsRouter.post('/save', isAuth, isAdmin, saveProduct)
+productsRouter.put('/save/:id', isAuth, isAdmin, saveProduct)
 productsRouter.delete('/:id', isAuth, isAdmin, deleteProduct)
 
 export default productsRouter
