@@ -3,7 +3,7 @@ dotenv.config()
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import User from '../models/users.js'
-import Product from '../models/products.js'
+
 
 export const getUsers = async (req, res) => {
   try {
