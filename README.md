@@ -1,3 +1,9 @@
+### Getting started
+
+- clone github repository - https://github.com/tpl457579/project-13-backend
+- npm init -y (to install dependencies)
+- npm run start
+
 # Backend Specifics
 
 - Deployment Url - https://project-13-backend-1sra.onrender.com/
