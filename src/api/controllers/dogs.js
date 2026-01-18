@@ -1,13 +1,4 @@
-import fs from 'fs/promises'
-import path from 'path'
-import { fileURLToPath } from 'url'
-import { randomUUID } from 'crypto'
 import dogSchema from '../models/dogs.js'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const jsonFilePath = path.join(__dirname, '..', '..', 'utils', 'mergedDogsFull.json')
-const jsonTempPath = `${jsonFilePath}.tmp`
 
 function normalizeTemperament(input) {
   if (!input) return []
@@ -17,25 +8,12 @@ function normalizeTemperament(input) {
   return Array.from(new Set(String(input).split(',').map((s) => s.trim()).filter(Boolean)))
 }
 
-async function ensureJsonFile() {
-  try {
-    await fs.access(jsonFilePath)
-  } catch {
-    await fs.mkdir(path.dirname(jsonFilePath), { recursive: true })
-    await fs.writeFile(jsonFilePath, '[]', 'utf8')
-  }
-}
-
-function validateFormats(payload) {
-  if (payload.weight && !/^\s*\d+\s*-\s*\d+\s*kg\s*$/i.test(String(payload.weight).trim())) {
-    return 'Weight must be like "10 - 20 kg"'
-  }
-  if (payload.height && !/^\s*\d+\s*-\s*\d+\s*cm\s*$/i.test(String(payload.height).trim())) {
-    return 'Height must be like "10 - 20 cm"'
-  }
-  if (payload.life_span && !/^\s*\d+\s*-\s*\d+\s*years\s*$/i.test(String(payload.life_span).trim())) {
-    return 'Life span must be like "10 - 14 years"'
-  }
+function validateBody(body) {
+  if (!body || typeof body !== 'object') return 'Invalid payload'
+  if (!body.name || typeof body.name !== 'string' || !body.name.trim()) return 'Missing or invalid name'
+  if (body.weight && !/^\s*\d+\s*-\s*\d+\s*kg\s*$/i.test(String(body.weight).trim())) return 'Weight must be like "10 - 20 kg"'
+  if (body.height && !/^\s*\d+\s*-\s*\d+\s*cm\s*$/i.test(String(body.height).trim())) return 'Height must be like "10 - 20 cm"'
+  if (body.life_span && !/^\s*\d+\s*-\s*\d+\s*years\s*$/i.test(String(body.life_span).trim())) return 'Life span must be like "10 - 14 years"'
   return null
 }
 
@@ -43,12 +21,8 @@ export const addDog = async (req, res) => {
   try {
     const body = req.body || {}
 
-    if (!body.name || typeof body.name !== 'string' || !body.name.trim()) {
-      return res.status(400).json({ error: 'Missing or invalid name' })
-    }
-
-    const formatError = validateFormats(body)
-    if (formatError) return res.status(400).json({ error: formatError })
+    const validationError = validateBody(body)
+    if (validationError) return res.status(400).json({ error: validationError })
 
     const temperament = normalizeTemperament(body.temperament)
 
@@ -70,44 +44,6 @@ export const addDog = async (req, res) => {
     })
 
     const saved = await doc.save()
-
-    try {
-      await ensureJsonFile()
-      const file = await fs.readFile(jsonFilePath, 'utf8')
-      let arr = []
-      try {
-        arr = JSON.parse(file)
-        if (!Array.isArray(arr)) arr = []
-      } catch {
-        arr = []
-      }
-
-      const jsonEntry = {
-        id: saved._id ? String(saved._id) : randomUUID(),
-        name: saved.name,
-        image_link: saved.image_link || '',
-        temperament: Array.isArray(saved.temperament) ? Array.from(new Set(saved.temperament.map(String).map((s) => s.trim()).filter(Boolean))) : [],
-        weight: saved.weight || '',
-        height: saved.height || '',
-        life_span: saved.life_span || '',
-        good_with_children: typeof saved.good_with_children === 'number' ? saved.good_with_children : 0,
-        good_with_other_dogs: typeof saved.good_with_other_dogs === 'number' ? saved.good_with_other_dogs : 0,
-        shedding: typeof saved.shedding === 'number' ? saved.shedding : 0,
-        grooming: typeof saved.grooming === 'number' ? saved.grooming : 0,
-        good_with_strangers: typeof saved.good_with_strangers === 'number' ? saved.good_with_strangers : 0,
-        playfulness: typeof saved.playfulness === 'number' ? saved.playfulness : 0,
-        protectiveness: typeof saved.protectiveness === 'number' ? saved.protectiveness : 0,
-        energy: typeof saved.energy === 'number' ? saved.energy : 0,
-        createdAt: saved.createdAt ? new Date(saved.createdAt).toISOString() : new Date().toISOString()
-      }
-
-      arr.push(jsonEntry)
-      await fs.writeFile(jsonTempPath, JSON.stringify(arr, null, 2), 'utf8')
-      await fs.rename(jsonTempPath, jsonFilePath)
-    } catch (jsonErr) {
-      console.error('Failed to append to JSON file:', jsonErr)
-    }
-
     return res.status(201).json({ dog: saved })
   } catch (err) {
     console.error('addDog error:', err)
