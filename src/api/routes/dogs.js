@@ -6,7 +6,7 @@ const router = express.Router()
 
 router.get('/', getDogs)
 router.get('/:id', getDogById)
-router.post('/', isAdmin, saveDog)
+router.post('/add', isAdmin, saveDog)
 router.delete('/:id', isAdmin, deleteDog)
 
 export default router
