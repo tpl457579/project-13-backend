@@ -1,5 +1,5 @@
 import express from 'express'
-import { isAdmin } from '../middlewares/isAdmin.js'
+import { isAdmin } from '../../middlewares/adminAuth.js'
 import { getDogs, getDogById, saveDog, deleteDog } from '../controllers/dogs.js'
 
 const router = express.Router()
