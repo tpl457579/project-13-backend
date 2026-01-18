@@ -1,9 +1,12 @@
 import express from 'express'
-import { addDog, listDogs } from '../controllers/dogs.js'
+import { getDogs, getDogById, saveDog, deleteDog } from '../controllers/dogs.js'
 
 const router = express.Router()
 
-router.post('/add', addDog)
-router.get('/', listDogs)
+router.get('/dogs', getDogs)
+router.get('/dogs/:id', getDogById)
+router.post('/dogs', saveDog)
+router.delete('/dogs/:id', deleteDog)
+
 
 export default router
