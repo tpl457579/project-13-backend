@@ -1,7 +1,7 @@
 import { isAuth } from './auth.js'
 
 export const isAdmin = async (req, res, next) => {
-  await isAuth(req, res, async () => {
+  await isAuth(req, res, () => {
     if (req.user && req.user.role === 'admin') {
       next()
     } else {

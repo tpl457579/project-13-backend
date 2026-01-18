@@ -11,7 +11,6 @@ export const isAuth = async (req, res, next) => {
   const token = authHeader.split(' ')[1]
 
   if (!process.env.SECRET_KEY) {
-    console.error('SECRET_KEY not defined')
     return res.status(500).json({ message: 'Server configuration error' })
   }
 
@@ -29,12 +28,8 @@ export const isAuth = async (req, res, next) => {
     }
 
     req.user = user
-
     next()
   } catch (error) {
-    console.error('Auth error:', error.message)
-    return res
-      .status(401)
-      .json({ message: 'Unauthorized', error: error.message })
+    return res.status(401).json({ message: 'Unauthorized', error: error.message })
   }
 }

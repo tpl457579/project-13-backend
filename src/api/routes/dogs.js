@@ -1,12 +1,12 @@
 import express from 'express'
+import { isAdmin } from '../middlewares/isAdmin.js'
 import { getDogs, getDogById, saveDog, deleteDog } from '../controllers/dogs.js'
 
 const router = express.Router()
 
-router.get('/dogs', getDogs)
-router.get('/dogs/:id', getDogById)
-router.post('/dogs', saveDog)
-router.delete('/dogs/:id', deleteDog)
-
+router.get('/', getDogs)
+router.get('/:id', getDogById)
+router.post('/', isAdmin, saveDog)
+router.delete('/:id', isAdmin, deleteDog)
 
 export default router
