@@ -6,6 +6,7 @@ import { connectDB } from './src/config/db.js'
 import productsRouter from './src/api/routes/products.js'
 import usersRouter from './src/api/routes/users.js'
 import dogsRouter from './src/api/routes/dogs.js'
+
 import './src/utils/cron.js'
 
 const app = express()
@@ -27,6 +28,8 @@ console.log('USING PRODUCTS ROUTER')
 app.use('/api/v1/users', usersRouter)
 
 app.use('/api/v1/dogs', dogsRouter)
+
+
 
 app.get('/', (req, res) => {
   res.send('API is running')

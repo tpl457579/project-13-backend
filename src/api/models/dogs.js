@@ -5,7 +5,7 @@ const dogSchema = new mongoose.Schema(
     id: Number,
     name: { type: String, required: true },
     image_link: String,
-    temperament: [String],
+    temperament: { type: [String], default: [] },
     weight: String,
     height: String,
     life_span: String,

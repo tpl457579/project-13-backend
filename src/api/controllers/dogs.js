@@ -8,16 +8,8 @@ const normalizeTemperament = (input) => {
 
 export const getDogs = async (req, res) => {
   try {
-    const page = Math.max(Number(req.query.page) || 1, 1)
-    const limit = Math.max(Number(req.query.limit) || 8, 1)
-    const skip = (page - 1) * limit
-
-    const [dogs, total] = await Promise.all([
-      Dog.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-      Dog.countDocuments()
-    ])
-
-    res.json({ dogs, total, page, totalPages: Math.ceil(total / limit) })
+    const dogs = await Dog.find().sort({ name: 1 }).lean()
+    res.json({ dogs })
   } catch {
     res.status(500).json({ error: 'Failed to fetch dogs' })
   }
