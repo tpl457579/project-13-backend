@@ -8,7 +8,7 @@ const dogSchema = new mongoose.Schema(
     temperament: { type: [String], default: [] },
     weight: String,
     height: String,
-    publicId: stringStream,
+    publicId: String,
     life_span: String,
     good_with_children: Number,
     good_with_other_dogs: Number,
