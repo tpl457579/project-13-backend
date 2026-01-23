@@ -15,13 +15,11 @@ const migrateData = async () => {
     for (let dog of dogs) {
       let changed = false;
 
-      // Update Weight: Only add 'kg' if it's not already there
       if (dog.weight && !dog.weight.includes('kg')) {
         dog.weight = `${dog.weight} kg`;
         changed = true;
       }
 
-      // Update Height: Only add 'cm' if it's not already there
       if (dog.height && !dog.height.includes('cm')) {
         dog.height = `${dog.height} cm`;
         changed = true;
