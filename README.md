@@ -8,6 +8,29 @@
 
 - Deployment Url - https://project-13-backend-1sra.onrender.com/
 
+### Endpoints
+
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/dogs` | Retrieves all dog listings. | Public |
+| `GET` | `/api/dogs/:id` | Retrieves a specific dog by ID. | Public |
+| `POST` | `/api/dogs/save` | Creates or updates a dog entry. | Admin |
+| `DELETE` | `/api/dogs/:id` | Removes a dog entry. | Admin |
+| `POST` | `/api/products/fetch-metadata` | Scrapes details from external URLs. | Public |
+| `GET` | `/api/products` | Lists all inventory products. | Public |
+| `GET` | `/api/products/:id` | Fetches details for a single product. | Public |
+| `POST` | `/api/products/save` | Adds a new product to the database. | Auth + Admin |
+| `PUT` | `/api/products/save/:id` | Updates an existing product. | Auth + Admin |
+| `DELETE` | `/api/products/:id` | Deletes a product from the system. | Auth + Admin |
+| `POST` | `/api/users/register` | User account creation. | Public |
+| `POST` | `/api/users/login` | User authentication/token issuance. | Public |
+| `GET` | `/api/users` | Retrieves a list of all users. | Auth |
+| `GET` | `/api/users/:id` | Returns a specific user profile. | Auth |
+| `GET` | `/api/users/:id/favourites` | Lists products saved to a user's favorites. | Auth |
+| `PUT` | `/api/users/:id` | Updates profile information. | Auth |
+| `PUT` | `/api/users/favourites/:productId` | Toggles a product in the favorites list. | Auth |
+| `DELETE` | `/api/users/:id` | Permanently deletes a user account. | Auth |
+
 ### Technologies Used
 
 - **Node.js** – Used to run JavaScript on the server, enabling fast, scalable backend applications.
