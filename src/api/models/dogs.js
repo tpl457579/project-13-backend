@@ -4,20 +4,20 @@ const dogSchema = new mongoose.Schema(
   {
     id: Number,
     name: { type: String, required: true },
-    image_link: String,
+    image_link: { type: String, required: true },
     temperament: { type: [String], default: [] },
     weight: String,
     height: String,
     publicId: String,
     life_span: String,
-    good_with_children: Number,
-    good_with_other_dogs: Number,
-    shedding: Number,
-    grooming: Number,
-    good_with_strangers: Number,
-    playfulness: Number,
-    protectiveness: Number,
-    energy: Number
+    good_with_children: String,
+    good_with_other_dogs: String,
+    shedding: String,
+    grooming: String,
+    good_with_strangers: String,
+    playfulness: String,
+    protectiveness: String,
+    energy: String
   },
   { timestamps: true }
 )
