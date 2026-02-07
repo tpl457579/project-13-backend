@@ -126,21 +126,37 @@ export const saveProduct = async (req, res) => {
 
 export const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id)
-    if (!product) return res.status(404).json({ message: 'Product not found' })
+    const { id } = req.params;
 
-    if (product.imagePublicId) {
-      await cloudinary.uploader.destroy(product.imagePublicId)
+    if (!id || id === 'undefined' || id.length !== 24) {
+      return res.status(400).json({ message: 'Invalid Product ID format' });
     }
 
-    await product.deleteOne()
-    res.status(200).json({ message: 'Product and image deleted successfully' })
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    if (product.imagePublicId) {
+      try {
+        await cloudinary.uploader.destroy(product.imagePublicId);
+      } catch (cloudErr) {
+        console.error(cloudErr.message);
+      }
+    }
+
+    await product.deleteOne();
+    
+    cleanupFavourites().catch(err => console.error(err));
+
+    res.status(200).json({ message: 'Product and image deleted successfully' });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: 'Failed to delete product', error: err.message })
+    res.status(500).json({ 
+      message: 'Failed to delete product', 
+      error: err.message 
+    });
   }
-}
+};
 
 export const cleanupFavourites = async () => {
   const users = await User.find()
