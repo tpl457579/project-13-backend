@@ -1,4 +1,9 @@
+console.log("MONGO_URI from cron:", process.env.MONGO_URI)
+
+
+import 'dotenv/config'
 import cron from 'node-cron'
+import mongoose from 'mongoose'
 import winston from 'winston'
 import DailyRotateFile from 'winston-daily-rotate-file'
 import { scrapeProducts } from './scraper.js'
@@ -24,6 +29,9 @@ const logger = winston.createLogger({
   transports: [new winston.transports.Console(), transport]
 })
 
+logger.info('Connecting to MongoDB...')
+await mongoose.connect(process.env.MONGO_URI)
+logger.info('Connected to MongoDB')
 
 cron.schedule('0 2 * * *', async () => {
   try {

@@ -1,48 +1,53 @@
-import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import { connectDB } from './src/config/db.js';
+import dotenv from 'dotenv'
+dotenv.config()
+import express from 'express'
+import cors from 'cors'
+import { connectDB } from './src/config/db.js'
+import productsRouter from './src/api/routes/products.js'
+import usersRouter from './src/api/routes/users.js'
+import dogsRouter from './src/api/routes/dogs.js'
+import catsRouter from './src/api/routes/cats.js'
 
-const app = express();
+import './src/utils/cron.js'
 
-// 1. Initialize Database but DON'T block the server start
-connectDB(); 
+const app = express()
 
-// 2. Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
+connectDB()
 
-// 3. Routes
-import productsRouter from './src/api/routes/products.js';
-import usersRouter from './src/api/routes/users.js';
-import dogsRouter from './src/api/routes/dogs.js';
-import catsRouter from './src/api/routes/cats.js';
+app.use(express.json())
 
-app.use('/api/v1/products', productsRouter);
-app.use('/api/v1/users', usersRouter);
-app.use('/api/v1/dogs', dogsRouter);
-app.use('/api/v1/cats', catsRouter);
+app.use(express.urlencoded({ extended: true }))
 
-// 4. Load Cron
-import './src/utils/cron.js';
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || '*'
+  })
+)
+app.use('/api/v1/products', productsRouter)
+console.log('USING PRODUCTS ROUTER')
+
+app.use('/api/v1/users', usersRouter)
+
+app.use('/api/v1/dogs', dogsRouter)
+
+app.use('/api/v1/cats', catsRouter)
+
+
 
 app.get('/', (req, res) => {
-  res.send('API is running');
-});
+  res.send('API is running')
+})
 
-// 5. Error Handling
 app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
+  res.status(404).json({ message: 'Route not found' })
+})
 
 app.use((err, req, res, next) => {
-  console.error('Server error:', err.stack);
-  res.status(500).json({ message: 'Internal server error' });
-});
+  console.error('Server error:', err.stack)
+  res.status(500).json({ message: 'Internal server error' })
+})
 
-// 6. Start Server immediately
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 3000
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`)
+})

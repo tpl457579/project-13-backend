@@ -1,7 +1,7 @@
-
+import 'dotenv/config'
 import puppeteer from 'puppeteer-extra'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
-
+import mongoose from 'mongoose'
 import Product from '../api/models/products.js'
 import { cloudinary } from '../middlewares/file.js'
 import * as cheerio from 'cheerio'
@@ -9,45 +9,39 @@ import * as cheerio from 'cheerio'
 puppeteer.use(StealthPlugin())
 
 const SCRAPE_CONFIG = [
-  {
-    category: 'Toys',
-    baseUrl: 'https://www.amazon.ie/s?k=dog+toys',
-    pages: 5
-  },
-  {
-    category: 'Food',
-    baseUrl: 'https://www.amazon.ie/s?i=pets&rh=n%3A80928622031%2Cn%3A94832582031%2Cn%3A94832596031%2Cp_36%3A95174108031&s=popularity-rank',
-    pages: 5
-  }
+  { category: 'Toys', petType: 'dog', baseUrl: 'https://www.amazon.ie/s?k=dog+toys', pages: 3 },
+  { category: 'Food', petType: 'dog', baseUrl: 'https://www.amazon.ie/s?k=dog+food', pages: 3 },
+  { category: 'Clothing', petType: 'dog', baseUrl: 'https://www.amazon.ie/s?k=dog+clothing', pages: 3 },
+  { category: 'Toys', petType: 'cat', baseUrl: 'https://www.amazon.ie/s?k=cat+toys', pages: 3 },
+  { category: 'Food', petType: 'cat', baseUrl: 'https://www.amazon.ie/s?k=cat+food', pages: 3 },
+  { category: 'Clothing', petType: 'cat', baseUrl: 'https://www.amazon.ie/s?k=cat+clothing', pages: 3 }
 ]
 
 export const scrapeProducts = async () => {
-  console.log('Starting Scrape: 5 Pages per Category (Organic Only)...')
-
+  const stats = { new: 0, updated: 0, skipped: 0, errors: 0 }
+  const startTime = Date.now()
+  
   try {
-    const browser = await puppeteer.launch({
+    await mongoose.connect(process.env.MONGO_URI)
+    const browser = await puppeteer.launch({ 
       headless: "new",
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled']
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled'] 
     })
-
+    
     const page = await browser.newPage()
     await page.setViewport({ width: 1280, height: 800 })
 
     for (const config of SCRAPE_CONFIG) {
-      console.log(`Category: ${config.category}`)
+      console.log(`🚀 Starting: ${config.petType} ${config.category}`)
 
       for (let i = 1; i <= config.pages; i++) {
         const url = `${config.baseUrl}&page=${i}`
-        console.log(`[${config.category}] Page ${i} -> ${url}`)
-
         await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
 
-        if (config === SCRAPE_CONFIG[0] && i === 1) {
+        if (i === 1) {
           try {
-            const cookieButton = '#sp-cc-accept'
-            await page.waitForSelector(cookieButton, { timeout: 4000 })
-            await page.click(cookieButton)
-            console.log('Cookies Accepted')
+            await page.waitForSelector('#sp-cc-accept', { timeout: 3000 })
+            await page.click('#sp-cc-accept')
           } catch (e) {}
         }
 
@@ -59,15 +53,11 @@ export const scrapeProducts = async () => {
         const items = []
 
         $('div[data-component-type="s-search-result"]').each((_, el) => {
-          const isSponsored = $(el).find('.puis-sponsored-label-text, .s-sponsored-label-text').length > 0
-          if (isSponsored) return
+          if ($(el).find('.puis-sponsored-label-text, .s-sponsored-label-text').length > 0) return 
 
           const asin = $(el).attr('data-asin')
           const name = $(el).find('h2 span').first().text().trim()
           if (!asin || !name) return
-
-          const rawUrl = $(el).find('a.a-link-normal.s-no-outline').attr('href')
-          const imageUrl = $(el).find('img.s-image').attr('src')
 
           const ratingText = $(el).find('span.a-icon-alt').first().text().trim()
           const rating = ratingText ? parseFloat(ratingText.split(' ')[0]) : null
@@ -80,67 +70,56 @@ export const scrapeProducts = async () => {
           items.push({
             asin,
             name,
-            url: `https://www.amazon.ie${rawUrl}`,
-            imageUrl,
+            url: `https://www.amazon.ie${$(el).find('a.a-link-normal.s-no-outline').attr('href')}`,
+            imageUrl: $(el).find('img.s-image').attr('src'),
             rating,
-            priceWhole: Number(cleanWhole),
-            priceFraction: Number(cleanFraction),
             price: parseFloat(`${cleanWhole}.${cleanFraction.padStart(2, '0')}`),
-            category: config.category
+            category: config.category,
+            petType: config.petType
           })
         })
 
-        console.log(`Page ${i}: Found ${items.length} organic items.`)
-
         for (const p of items) {
           try {
-            const existing = await Product.findOne({ asin: p.asin })
+            const existing = await Product.findOne({ asin: p.asin });
 
             if (existing) {
-              const imageChanged = p.imageUrl !== existing.lastScrapedImageUrl
+              const needsUpdate = existing.price !== p.price || 
+                                  existing.petType !== p.petType || 
+                                  !existing.category;
 
-              if (imageChanged) {
-                console.log(`Image changed for ${p.asin}. Re-uploading...`)
-                const uploadRes = await cloudinary.uploader.upload(p.imageUrl, {
-                  folder: 'products',
-                  public_id: existing.imagePublicId,
-                  overwrite: true
-                })
-                p.imageUrl = uploadRes.secure_url
+              if (needsUpdate) {
+                await Product.updateOne({ asin: p.asin }, { ...p, lastUpdated: new Date() });
+                stats.updated++;
               } else {
-                p.imageUrl = existing.imageUrl
+                stats.skipped++;
               }
-
-              const sourceUrl = p.imageUrl === existing.imageUrl ? existing.lastScrapedImageUrl : p.imageUrl
-
-              Object.assign(existing, p)
-              existing.lastScrapedImageUrl = sourceUrl
-              existing.lastUpdated = new Date()
-              await existing.save()
             } else {
-              console.log(`New product: ${p.asin}`)
-              const uploadRes = await cloudinary.uploader.upload(p.imageUrl, { folder: 'products' })
-
-              const newProduct = new Product({
-                ...p,
-                imageUrl: uploadRes.secure_url,
+              const uploadRes = await cloudinary.uploader.upload(p.imageUrl, { folder: 'products' });
+              await Product.create({ 
+                ...p, 
+                imageUrl: uploadRes.secure_url, 
                 imagePublicId: uploadRes.public_id,
-                lastScrapedImageUrl: p.imageUrl
-              })
-              await newProduct.save()
+                lastScrapedImageUrl: p.imageUrl 
+              });
+              stats.new++;
             }
           } catch (err) {
-            console.error(`DB Error for ${p.asin}:`, err.message)
+            stats.errors++;
           }
         }
-
-        await new Promise(r => setTimeout(r, Math.floor(Math.random() * 2000) + 1000))
+        await new Promise(r => setTimeout(r, 1000))
       }
     }
 
     await browser.close()
-    console.log('Scrape Complete!')
   } catch (err) {
-    console.error('Scraper Error:', err.message)
+    console.error('🚨 Fatal:', err.message)
+  } finally {
+    console.log('--- Final Summary ---')
+    console.log(`New: ${stats.new} | Updated: ${stats.updated} | Errors: ${stats.errors}`)
+    if (mongoose.connection.readyState !== 0) await mongoose.disconnect()
   }
 }
+
+scrapeProducts().then(() => process.exit(0))

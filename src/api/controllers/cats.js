@@ -32,29 +32,25 @@ export const getCats = async (req, res) => {
 
 export const saveCat = async (req, res) => {
   try {
-    // 1. Destructure only what you need, ignoring weight/height
-    const { _id, publicId, name, temperament, ...rest } = req.body;
+    const { _id, publicId, name, weight, height, temperament, ...rest } = req.body;
 
-    // 2. Format Temperament as Array (Splits "active, playful" into ["active", "playful"])
     const formattedTemperament = Array.isArray(temperament) 
       ? temperament 
       : String(temperament || '').split(',').map(t => t.trim()).filter(Boolean);
 
-    // 3. Prepare data for DB
     const updateData = {
       ...rest,
       name: name?.trim(),
+      weight: weight?.toLowerCase().includes('kg') ? weight : `${weight} kg`,
+      height: height?.toLowerCase().includes('cm') ? height : `${height} cm`,
       temperament: formattedTemperament,
-      publicId,
-      // Fallback for the required 'id' field
-      id: rest.id || publicId || `manual_${Date.now()}`
+      publicId
     };
 
     if (_id) {
       const existingCat = await Cat.findById(_id);
       
-      // Handle Cloudinary cleanup if the image changed
-      if (existingCat?.publicId && existingCat.publicId !== publicId) {
+      if (existingCat && existingCat.publicId && existingCat.publicId !== publicId) {
         try {
           await cloudinary.uploader.destroy(existingCat.publicId);
         } catch (cloudErr) {
@@ -66,7 +62,6 @@ export const saveCat = async (req, res) => {
       return res.status(200).json(updatedCat);
     }
 
-    // Create new entry
     const newCat = new Cat(updateData);
     await newCat.save();
     res.status(201).json(newCat);

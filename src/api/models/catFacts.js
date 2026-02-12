@@ -5,4 +5,4 @@ const catFactSchema = new mongoose.Schema({
   category: { type: String, default: 'General' }
 });
 
-export default mongoose.model('CatFact', catFactSchema);
+export default mongoose.model('CatFact', catFactSchema); 

@@ -1,15 +1,16 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const catSchema = new mongoose.Schema({
-  // Using 'id' as a string is great for external API data (like TheCatAPI)
-  id: { type: String, required: true, unique: true }, 
-  publicId: { type: String }, 
+  // Using the image ID (e.g., '0XYvRd7oD') as a unique identifier
+  id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   imageUrl: { type: String, required: true },
   
-  temperament: [{ type: String }],
+  // Breed Details
+  temperament: { type: String },
   lifeSpan: { type: String },
   
+  // Numeric Stats (1-5 scale from the API)
   affectionLevel: { type: Number, min: 1, max: 5 },
   childFriendly: { type: Number, min: 1, max: 5 },
   dogFriendly: { type: Number, min: 1, max: 5 },
@@ -18,18 +19,12 @@ const catSchema = new mongoose.Schema({
   sheddingLevel: { type: Number, min: 1, max: 5 },
   strangerFriendly: { type: Number, min: 1, max: 5 },
 
-  type: { type: String, default: 'cat' }
-}, {
-  // Automatically creates 'createdAt' and 'updatedAt' fields
-  timestamps: true,
-  // Ensures that when you convert to JSON (for the frontend), virtuals are included
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  // Metadata
+  type: { type: String, default: 'cat' },
+  lastUpdated: { type: Date, default: Date.now }
 });
 
-// If you want to use the 'id' field interchangeably with Mongoose's '_id'
-catSchema.virtual('productId').get(function() {
-  return this.id;
-});
+// Create the model
+const Cat = mongoose.model('Cat', catSchema);
 
-export default mongoose.model('Cat', catSchema);
+export default Cat;
