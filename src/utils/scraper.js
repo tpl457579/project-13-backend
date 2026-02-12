@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
 import mongoose from 'mongoose';
 import { globSync } from 'glob';
-import Product from './api/models/products.js'; // Adjust path to your model
+import Product from '../api/products.js'; 
 import 'dotenv/config';
 
 export const scrapeProducts = async () => {
@@ -9,8 +9,6 @@ export const scrapeProducts = async () => {
   
   let browser;
   try {
-    // 1. DYNAMIC EXECUTABLE PATH FINDER
-    // This looks for the chrome binary regardless of the version number
     let executablePath = null;
     if (process.env.RENDER) {
       const foundPaths = globSync('/opt/render/.cache/puppeteer/**/chrome-linux64/chrome');
