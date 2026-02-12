@@ -3,6 +3,8 @@ import puppeteer from 'puppeteer-extra'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import mongoose from 'mongoose'
 import Product from '../api/models/products.js'
+import fs from 'fs'
+import path from 'path'
 import { cloudinary } from '../middlewares/file.js'
 import * as cheerio from 'cheerio'
 
