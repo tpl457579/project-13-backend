@@ -27,7 +27,7 @@
     "fdir": "^6.5.0",
     "glob": "^13.0.2",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "4.1",
+    "mongodb": "3.6",
     "mongoose": "^8.23.0",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",

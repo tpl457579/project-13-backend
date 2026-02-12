@@ -1,5 +1,6 @@
 import Cat from '../models/cats.js'
 import { v2 as cloudinary } from 'cloudinary';
+import mongoose from 'mongoose';
 
 cloudinary.config({
   cloud_name: process.env.VITE_CLOUD_NAME,
@@ -32,7 +33,7 @@ export const getCats = async (req, res) => {
 
 export const saveCat = async (req, res) => {
   try {
-    const { _id, publicId, name, weight, height, temperament, ...rest } = req.body;
+    const { _id, publicId, name, temperament, ...rest } = req.body;
 
     const formattedTemperament = Array.isArray(temperament) 
       ? temperament 
@@ -41,23 +42,20 @@ export const saveCat = async (req, res) => {
     const updateData = {
       ...rest,
       name: name?.trim(),
-      weight: weight?.toLowerCase().includes('kg') ? weight : `${weight} kg`,
-      height: height?.toLowerCase().includes('cm') ? height : `${height} cm`,
       temperament: formattedTemperament,
-      publicId
+      publicId,
+      id: rest.id || publicId || `manual_${Date.now()}`
     };
 
     if (_id) {
       const existingCat = await Cat.findById(_id);
-      
-      if (existingCat && existingCat.publicId && existingCat.publicId !== publicId) {
+      if (existingCat?.publicId && existingCat.publicId !== publicId) {
         try {
           await cloudinary.uploader.destroy(existingCat.publicId);
         } catch (cloudErr) {
-          console.error("Cloudinary Delete Error:", cloudErr);
+          console.error(cloudErr);
         }
       }
-
       const updatedCat = await Cat.findByIdAndUpdate(_id, updateData, { new: true });
       return res.status(200).json(updatedCat);
     }
@@ -65,13 +63,10 @@ export const saveCat = async (req, res) => {
     const newCat = new Cat(updateData);
     await newCat.save();
     res.status(201).json(newCat);
-
   } catch (error) {
-    console.error("Save Cat Error:", error);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
-
 
 export const getCatById = async (req, res) => {
   try {
