@@ -24,8 +24,6 @@ export const scrapeProducts = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI)
 
-    import fs from 'fs';
-import path from 'path';
 
 // ... inside your scrape function
 const getExecutablePath = () => {
