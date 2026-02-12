@@ -1,136 +1,125 @@
 import 'dotenv/config'
-import puppeteer from 'puppeteer'
+import puppeteer from 'puppeteer-extra'
+import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import mongoose from 'mongoose'
 import Product from '../api/models/products.js'
 import { cloudinary } from '../middlewares/file.js'
 import * as cheerio from 'cheerio'
 
+puppeteer.use(StealthPlugin())
+
+const SCRAPE_CONFIG = [
+  { category: 'Toys', petType: 'dog', baseUrl: 'https://www.amazon.ie/s?k=dog+toys', pages: 3 },
+  { category: 'Food', petType: 'dog', baseUrl: 'https://www.amazon.ie/s?k=dog+food', pages: 3 },
+  { category: 'Clothing', petType: 'dog', baseUrl: 'https://www.amazon.ie/s?k=dog+clothing', pages: 3 },
+  { category: 'Toys', petType: 'cat', baseUrl: 'https://www.amazon.ie/s?k=cat+toys', pages: 3 },
+  { category: 'Food', petType: 'cat', baseUrl: 'https://www.amazon.ie/s?k=cat+food', pages: 3 },
+  { category: 'Clothing', petType: 'cat', baseUrl: 'https://www.amazon.ie/s?k=cat+clothing', pages: 3 }
+]
+
 export const scrapeProducts = async () => {
-  console.log('Scrape started...')
-
-  await mongoose.connect(process.env.MONGO_URI)
-
-  const browser = await puppeteer.launch({ headless: true })
-  const page = await browser.newPage()
-  await page.setExtraHTTPHeaders({
-    'User-Agent':
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
-  })
-
+  const stats = { new: 0, updated: 0, skipped: 0, errors: 0 }
+  const startTime = Date.now()
+  
   try {
-    const url =
-      'https://www.amazon.ie/s?k=dog+toys&crid=2MQ7LPZESCJQJ&sprefix=dog+%2Caps%2C975&ref=nb_sb_ss_i_2_4'
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 })
-
-    try {
-      await page.waitForSelector('#onetrust-accept-btn-handler', {
-        timeout: 5000
-      })
-      await page.click('#onetrust-accept-btn-handler')
-      await page.waitForTimeout(1000)
-    } catch {
-      console.log('No cookie banner found')
-    }
-
-    console.log('Scraping first page...')
-
-    const html = await page.content()
-    const $ = cheerio.load(html)
-    const products = []
-
-    $('div[data-component-type="s-search-result"]').each((_, el) => {
-      const asin = $(el).attr('data-asin')
-      const name = $(el).find('h2 span').text().trim()
-      const rawUrl = $(el).find('a.a-link-normal.s-no-outline').attr('href')
-      const productUrl = rawUrl?.startsWith('http')
-        ? rawUrl
-        : rawUrl
-        ? `https://www.amazon.ie${rawUrl}`
-        : null
-      const imageUrl = $(el).find('img.s-image').attr('src')
-      const ratingText = $(el).find('span.a-icon-alt').first().text().trim()
-
-      const rawWhole = $(el).find('span.a-price-whole').text().trim()
-      const rawFraction = $(el).find('span.a-price-fraction').text().trim()
-      const cleanWhole = rawWhole.replace(/[^\d]/g, '') || '0'
-      const cleanFraction = rawFraction.replace(/[^\d]/g, '') || '00'
-      const priceWhole = Number(cleanWhole)
-      const priceFraction = Number(cleanFraction)
-      const price = parseFloat(
-        `${priceWhole}.${priceFraction.toString().padStart(2, '0')}`
-      )
-      const rating = ratingText ? parseFloat(ratingText) : null
-      console.log(
-        `ASIN: ${asin}, Name: ${name}, RatingText: "${ratingText}", Rating: ${rating}`
-      )
-      products.push({
-        asin,
-        name,
-        productUrl,
-        imageUrl,
-        rating,
-        price,
-        priceWhole,
-        priceFraction
-      })
+    await mongoose.connect(process.env.MONGO_URI)
+    const browser = await puppeteer.launch({ 
+      headless: "new",
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled'] 
     })
+    
+    const page = await browser.newPage()
+    await page.setViewport({ width: 1280, height: 800 })
 
-    for (const p of products) {
-      try {
-        const existing = await Product.findOne({ asin: p.asin })
+    for (const config of SCRAPE_CONFIG) {
+      console.log(`🚀 Starting: ${config.petType} ${config.category}`)
 
-        if (existing) {
-          existing.name = p.name
-          existing.url = p.productUrl
-          existing.price = p.price
-          existing.priceWhole = p.priceWhole
-          existing.priceFraction = p.priceFraction
-          existing.rating = p.rating
-          existing.lastUpdated = new Date()
-          await existing.save()
-          continue
+      for (let i = 1; i <= config.pages; i++) {
+        const url = `${config.baseUrl}&page=${i}`
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
+
+        if (i === 1) {
+          try {
+            await page.waitForSelector('#sp-cc-accept', { timeout: 3000 })
+            await page.click('#sp-cc-accept')
+          } catch (e) {}
         }
 
-        const uploadRes = await cloudinary.uploader.upload(p.imageUrl, {
-          folder: 'products',
-          overwrite: false,
-          invalidate: true
+        await page.evaluate(() => window.scrollBy(0, window.innerHeight))
+        await new Promise(r => setTimeout(r, 2000))
+
+        const html = await page.content()
+        const $ = cheerio.load(html)
+        const items = []
+
+        $('div[data-component-type="s-search-result"]').each((_, el) => {
+          if ($(el).find('.puis-sponsored-label-text, .s-sponsored-label-text').length > 0) return 
+
+          const asin = $(el).attr('data-asin')
+          const name = $(el).find('h2 span').first().text().trim()
+          if (!asin || !name) return
+
+          const ratingText = $(el).find('span.a-icon-alt').first().text().trim()
+          const rating = ratingText ? parseFloat(ratingText.split(' ')[0]) : null
+
+          const rawWhole = $(el).find('span.a-price-whole').text().trim()
+          const rawFraction = $(el).find('span.a-price-fraction').text().trim()
+          const cleanWhole = rawWhole.replace(/[^\d]/g, '') || '0'
+          const cleanFraction = rawFraction.replace(/[^\d]/g, '') || '00'
+
+          items.push({
+            asin,
+            name,
+            url: `https://www.amazon.ie${$(el).find('a.a-link-normal.s-no-outline').attr('href')}`,
+            imageUrl: $(el).find('img.s-image').attr('src'),
+            rating,
+            price: parseFloat(`${cleanWhole}.${cleanFraction.padStart(2, '0')}`),
+            category: config.category,
+            petType: config.petType
+          })
         })
 
-        const productDoc = new Product({
-          asin: p.asin,
-          name: p.name,
-          url: p.productUrl,
-          imageUrl: uploadRes.secure_url,
-          imagePublicId: uploadRes.public_id,
-          rating: p.rating,
-          price: p.price,
-          priceWhole: p.priceWhole,
-          priceFraction: p.priceFraction,
-          lastUpdated: new Date()
-        })
+        for (const p of items) {
+          try {
+            const existing = await Product.findOne({ asin: p.asin });
 
-        await productDoc.save()
-      } catch (err) {
-        console.error(`Error saving ${p.name}:`, err.message)
+            if (existing) {
+              const needsUpdate = existing.price !== p.price || 
+                                  existing.petType !== p.petType || 
+                                  !existing.category;
+
+              if (needsUpdate) {
+                await Product.updateOne({ asin: p.asin }, { ...p, lastUpdated: new Date() });
+                stats.updated++;
+              } else {
+                stats.skipped++;
+              }
+            } else {
+              const uploadRes = await cloudinary.uploader.upload(p.imageUrl, { folder: 'products' });
+              await Product.create({ 
+                ...p, 
+                imageUrl: uploadRes.secure_url, 
+                imagePublicId: uploadRes.public_id,
+                lastScrapedImageUrl: p.imageUrl 
+              });
+              stats.new++;
+            }
+          } catch (err) {
+            stats.errors++;
+          }
+        }
+        await new Promise(r => setTimeout(r, 1000))
       }
     }
-  } catch (err) {
-    console.error('Scrape error:', err.message)
-  } finally {
+
     await browser.close()
-    console.log('Scrape finished, DB connection closed')
+  } catch (err) {
+    console.error('🚨 Fatal:', err.message)
+  } finally {
+    console.log('--- Final Summary ---')
+    console.log(`New: ${stats.new} | Updated: ${stats.updated} | Errors: ${stats.errors}`)
+    if (mongoose.connection.readyState !== 0) await mongoose.disconnect()
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  scrapeProducts()
-    .then(() => {
-      console.log('Scraping completed successfully.')
-      process.exit(0)
-    })
-    .catch((err) => {
-      console.error('Scraping failed:', err)
-      process.exit(1)
-    })
-}
+scrapeProducts().then(() => process.exit(0))
