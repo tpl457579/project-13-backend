@@ -23,14 +23,32 @@ export const scrapeProducts = async () => {
   
   try {
     await mongoose.connect(process.env.MONGO_URI)
-    const browser = await puppeteer.launch({
-  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH, // Must match Render env var
+
+    import fs from 'fs';
+import path from 'path';
+
+// ... inside your scrape function
+const getExecutablePath = () => {
+  // 1. Check if the env var works first
+  if (process.env.PUPPETEER_EXECUTABLE_PATH && fs.existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) {
+    return process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
+
+  // 2. Fallback: Search the Render cache directory for any chrome executable
+  const baseCache = '/opt/render/.cache/puppeteer/chrome';
+  if (fs.existsSync(baseCache)) {
+    const files = fs.readdirSync(baseCache, { recursive: true });
+    const chromeRelPath = files.find(f => f.endsWith('chrome-linux64/chrome'));
+    if (chromeRelPath) return path.join(baseCache, chromeRelPath);
+  }
+
+  return null; 
+};
+
+const browser = await puppeteer.launch({
+  executablePath: getExecutablePath(),
   headless: "new",
-  args: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage'
-  ]
+  args: ['--no-sandbox', '--disable-setuid-sandbox']
 });
     
     const page = await browser.newPage()
