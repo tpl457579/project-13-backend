@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
 import mongoose from 'mongoose';
 import { globSync } from 'glob';
-import Product from '../api/products.js'; 
+import Product from '/xapi/products.js'; 
 import 'dotenv/config';
 
 export const scrapeProducts = async () => {
