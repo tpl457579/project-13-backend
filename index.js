@@ -1,21 +1,17 @@
-import dotenv from 'dotenv'
-dotenv.config()
+import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import { connectDB } from './src/config/db.js'
-import productsRouter from './src/api/routes/products.js'
-import usersRouter from './src/api/routes/users.js'
-import dogsRouter from './src/api/routes/dogs.js'
-import catsRouter from './src/api/routes/cats.js'
-
-import './src/utils/cron.js'
 
 const app = express()
 
-connectDB()
+// WAIT for DB connection BEFORE anything else
+await connectDB()
+
+// Load cron AFTER DB is connected
+import './src/utils/cron.js'
 
 app.use(express.json())
-
 app.use(express.urlencoded({ extended: true }))
 
 app.use(
@@ -23,16 +19,18 @@ app.use(
     origin: process.env.CORS_ORIGIN || '*'
   })
 )
+
+import productsRouter from './src/api/routes/products.js'
+import usersRouter from './src/api/routes/users.js'
+import dogsRouter from './src/api/routes/dogs.js'
+import catsRouter from './src/api/routes/cats.js'
+
 app.use('/api/v1/products', productsRouter)
 console.log('USING PRODUCTS ROUTER')
 
 app.use('/api/v1/users', usersRouter)
-
 app.use('/api/v1/dogs', dogsRouter)
-
 app.use('/api/v1/cats', catsRouter)
-
-
 
 app.get('/', (req, res) => {
   res.send('API is running')
