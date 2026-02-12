@@ -1,8 +1,7 @@
 import puppeteer from 'puppeteer';
 import mongoose from 'mongoose';
 import { globSync } from 'glob';
-import Product from '/api/products.js'; 
-import 'dotenv/config';
+import Product from '../api/models/products.js' // ✅ Correct: Move up one folder to find api/import 'dotenv/config';
 
 export const scrapeProducts = async () => {
   console.log('--- 🚀 Starting Scraper ---');
