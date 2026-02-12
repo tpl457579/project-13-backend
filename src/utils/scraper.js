@@ -23,16 +23,10 @@ export const scrapeProducts = async () => {
   
   try {
     await mongoose.connect(process.env.MONGO_URI)
- const browser = await puppeteer.launch({
-  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null,
-  headless: "new",
-  args: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage',
-    '--disable-gpu'
-  ]
-});
+    const browser = await puppeteer.launch({ 
+      headless: "new",
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled'] 
+    })
     
     const page = await browser.newPage()
     await page.setViewport({ width: 1280, height: 800 })
