@@ -1,12 +1,15 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const catSchema = new mongoose.Schema({
-  id: { type: String, required: true, unique: true },
-  publicId: { type: String },
+  id: { type: String, required: true, unique: true }, 
+  publicId: { type: String }, 
   name: { type: String, required: true },
   imageUrl: { type: String, required: true },
-  temperament: [{ type: String }],
+  
+  temperament: [{ type: String }], // Array for multiple tags
   lifeSpan: { type: String },
+  
+  // Numeric Stats
   affectionLevel: { type: Number, min: 1, max: 5 },
   childFriendly: { type: Number, min: 1, max: 5 },
   dogFriendly: { type: Number, min: 1, max: 5 },
@@ -14,9 +17,9 @@ const catSchema = new mongoose.Schema({
   grooming: { type: Number, min: 1, max: 5 },
   sheddingLevel: { type: Number, min: 1, max: 5 },
   strangerFriendly: { type: Number, min: 1, max: 5 },
+
   type: { type: String, default: 'cat' },
   lastUpdated: { type: Date, default: Date.now }
 });
 
-const Cat = mongoose.model('Cat', catSchema);
-export default Cat;
+export default mongoose.model('Cat', catSchema);

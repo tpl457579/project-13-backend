@@ -1,6 +1,5 @@
 import Cat from '../models/cats.js'
 import { v2 as cloudinary } from 'cloudinary';
-import mongoose from 'mongoose';
 
 cloudinary.config({
   cloud_name: process.env.VITE_CLOUD_NAME,
@@ -33,40 +32,51 @@ export const getCats = async (req, res) => {
 
 export const saveCat = async (req, res) => {
   try {
+    // 1. Destructure only what you need, ignoring weight/height
     const { _id, publicId, name, temperament, ...rest } = req.body;
 
+    // 2. Format Temperament as Array (Splits "active, playful" into ["active", "playful"])
     const formattedTemperament = Array.isArray(temperament) 
       ? temperament 
       : String(temperament || '').split(',').map(t => t.trim()).filter(Boolean);
 
+    // 3. Prepare data for DB
     const updateData = {
       ...rest,
       name: name?.trim(),
       temperament: formattedTemperament,
       publicId,
+      // Fallback for the required 'id' field
       id: rest.id || publicId || `manual_${Date.now()}`
     };
 
     if (_id) {
       const existingCat = await Cat.findById(_id);
+      
+      // Handle Cloudinary cleanup if the image changed
       if (existingCat?.publicId && existingCat.publicId !== publicId) {
         try {
           await cloudinary.uploader.destroy(existingCat.publicId);
         } catch (cloudErr) {
-          console.error(cloudErr);
+          console.error("Cloudinary Delete Error:", cloudErr);
         }
       }
+
       const updatedCat = await Cat.findByIdAndUpdate(_id, updateData, { new: true });
       return res.status(200).json(updatedCat);
     }
 
+    // Create new entry
     const newCat = new Cat(updateData);
     await newCat.save();
     res.status(201).json(newCat);
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Save Cat Error:", error);
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
+
 
 export const getCatById = async (req, res) => {
   try {
