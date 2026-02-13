@@ -5,6 +5,7 @@ import { connectDB } from './src/config/db.js'
 import productsRouter from './src/api/routes/products.js'
 import usersRouter from './src/api/routes/users.js'
 import dogsRouter from './src/api/routes/dogs.js'
+import catsRouter from './src/api/routes/cats.js'
 
 
 
