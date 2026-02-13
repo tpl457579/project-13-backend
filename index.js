@@ -8,7 +8,7 @@ import usersRouter from './src/api/routes/users.js'
 import dogsRouter from './src/api/routes/dogs.js'
 import catsRouter from './src/api/routes/cats.js'
 
-import './src/utils/cron.js'
+/* import './src/utils/cron.js' */
 
 const app = express()
 
