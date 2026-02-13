@@ -1,53 +1,54 @@
-import dotenv from 'dotenv'
-dotenv.config()
+import 'dotenv/config' // Cleaner way to load variables in 2026
 import express from 'express'
 import cors from 'cors'
 import { connectDB } from './src/config/db.js'
 import productsRouter from './src/api/routes/products.js'
 import usersRouter from './src/api/routes/users.js'
 import dogsRouter from './src/api/routes/dogs.js'
-import catsRouter from './src/api/routes/cats.js'
 
-/* import './src/utils/cron.js' */
+
 
 const app = express()
 
+// Connect to Database
 connectDB()
 
-app.use(express.json())
+// MIDDLEWARES
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  credentials: true // Helpful for handling auth cookies if needed later
+}))
 
-app.use(express.urlencoded({ extended: true }))
+// Increased limit to handle image data/metadata if necessary
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || '*'
-  })
-)
+// ROUTES
+// Note: Ensure frontend calls /api/v1/products
 app.use('/api/v1/products', productsRouter)
-console.log('USING PRODUCTS ROUTER')
-
 app.use('/api/v1/users', usersRouter)
-
 app.use('/api/v1/dogs', dogsRouter)
 
-app.use('/api/v1/cats', catsRouter)
-
-
-
+// Status Check
 app.get('/', (req, res) => {
-  res.send('API is running')
+  res.send('API is running...')
 })
 
+// 404 Handler
 app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' })
+  res.status(404).json({ success: false, message: 'Route not found' })
 })
 
+// Global Error Handler
 app.use((err, req, res, next) => {
   console.error('Server error:', err.stack)
-  res.status(500).json({ message: 'Internal server error' })
+  res.status(err.status || 500).json({ 
+    success: false, 
+    message: err.message || 'Internal server error' 
+  })
 })
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 5000 // Port 5000 is standard for many MERN tutorials
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
 })
