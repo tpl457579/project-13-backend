@@ -1,6 +1,3 @@
-console.log("MONGO_URI from cron:", process.env.MONGO_URI)
-
-
 import 'dotenv/config'
 import cron from 'node-cron'
 import mongoose from 'mongoose'
