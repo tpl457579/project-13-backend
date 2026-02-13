@@ -17,27 +17,23 @@ connectDB()
 // MIDDLEWARES
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
-  credentials: true // Helpful for handling auth cookies if needed later
+  credentials: true 
 }))
 
-// Increased limit to handle image data/metadata if necessary
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
-// ROUTES
-// Note: Ensure frontend calls /api/v1/products
+
 app.use('/api/v1/products', productsRouter)
 app.use('/api/v1/users', usersRouter)
 app.use('/api/v1/dogs', dogsRouter)
 app.use('/api/v1/cats', catsRouter)
 
-
-// Status Check
 app.get('/', (req, res) => {
   res.send('API is running...')
 })
 
-app.get('/dogs/facts', async (req, res) => {
+/* app.get('/dogs/facts', async (req, res) => {
   const data = await db.collection('dog_facts').find({}).toArray(); 
   res.json(data);
 });
@@ -45,15 +41,12 @@ app.get('/dogs/facts', async (req, res) => {
 app.get('/cats/facts', async (req, res) => {
   const data = await db.collection('cat_facts').find({}).toArray(); 
   res.json(data);
-});
+}); */
 
-
-// 404 Handler
 app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' })
 })
 
-// Global Error Handler
 app.use((err, req, res, next) => {
   console.error('Server error:', err.stack)
   res.status(err.status || 500).json({ 
@@ -62,7 +55,7 @@ app.use((err, req, res, next) => {
   })
 })
 
-const PORT = process.env.PORT || 3000 // Port 5000 is standard for many MERN tutorials
+const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
 })

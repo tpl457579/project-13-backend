@@ -8,18 +8,14 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Helper: Standardize temperament
 const normalizeTemperament = (input) => {
   if (!input) return [];
   if (Array.isArray(input)) return input.map(t => t.trim()).filter(Boolean);
   return String(input).split(',').map(t => t.trim()).filter(Boolean);
 };
 
-// --- Cat Facts ---
-
 export const getCatFacts = async (req, res) => {
   try {
-    // Use the mongoose connection to access the collection directly
     const facts = await mongoose.connection.db.collection('cat_facts').find().toArray();
     res.status(200).json(facts);
   } catch (error) {
@@ -27,52 +23,51 @@ export const getCatFacts = async (req, res) => {
   }
 };
 
-// --- Cat CRUD ---
-
-export const getCats = async (req, res) => {
-  try {
-    const cats = await Cat.find().sort({ name: 1 }).lean();
-    res.json({ cats });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch cats' });
-  }
-};
-
 export const saveCat = async (req, res) => {
   try {
-    const { _id, publicId, name, weight, height, temperament, ...rest } = req.body;
+    const { _id, id, publicId, name, temperament, imageUrl, ...rest } = req.body;
 
     const updateData = {
       ...rest,
       name: name?.trim(),
-      weight: weight ? (weight.toLowerCase().includes('kg') ? weight : `${weight} kg`) : "",
-      height: height ? (height.toLowerCase().includes('cm') ? height : `${height} cm`) : "",
-      temperament: normalizeTemperament(temperament),
-      publicId
+      imageUrl: imageUrl,
+      temperament: Array.isArray(temperament) ? temperament.join(', ') : temperament,
+      lastUpdated: Date.now()
     };
 
-    if (_id) {
-      const existingCat = await Cat.findById(_id);
+    if (_id || id) {
+      const existingCat = await Cat.findOne({ 
+        $or: [{ _id: mongoose.isValidObjectId(_id) ? _id : null }, { id: id }] 
+      });
       
       if (existingCat && existingCat.publicId && existingCat.publicId !== publicId) {
         try {
           await cloudinary.uploader.destroy(existingCat.publicId);
         } catch (cloudErr) {
-          console.error("Cloudinary Delete Error:", cloudErr);
+          console.error(cloudErr);
         }
       }
 
-      const updatedCat = await Cat.findByIdAndUpdate(_id, updateData, { new: true });
-      return res.status(200).json(updatedCat);
-    }
+      const updated = await Cat.findOneAndUpdate(
+        { $or: [{ _id: _id }, { id: id }] }, 
+        updateData, 
+        { new: true, runValidators: true }
+      );
+      
+      return res.status(200).json(updated);
+    } 
 
-    const newCat = new Cat(updateData);
+    const newCat = new Cat({
+      ...updateData,
+      id: id || new mongoose.Types.ObjectId().toString(),
+      publicId
+    });
+
     await newCat.save();
     res.status(201).json(newCat);
 
   } catch (error) {
-    console.error("Save Cat Error:", error);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 

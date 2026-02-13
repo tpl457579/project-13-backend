@@ -1,5 +1,4 @@
 import express from 'express'
-// Keep the import, but we'll be careful with the usage below
 import { isAdmin } from '../../middlewares/adminAuth.js' 
 import { getCats, getCatFacts, getCatById, saveCat, deleteCat } from '../controllers/cats.js'
 

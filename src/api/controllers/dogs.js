@@ -1,5 +1,5 @@
 import Dog from '../models/dogs.js';
-import mongoose from 'mongoose'; // Added to handle facts through Mongoose if needed
+import mongoose from 'mongoose';
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
@@ -8,26 +8,20 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Helper: Standardize temperament array
 const normalizeTemperament = (input) => {
   if (!input) return [];
   if (Array.isArray(input)) return input.map(t => t.trim()).filter(Boolean);
   return String(input).split(',').map(t => t.trim()).filter(Boolean);
 };
 
-// --- Dog Facts Logic ---
-
 export const getDogFacts = async (req, res) => {
   try {
-    // Accessing the raw collection via Mongoose connection
     const facts = await mongoose.connection.db.collection('dog_facts').find().toArray();
     res.status(200).json(facts);
   } catch (error) {
     res.status(500).json({ message: "Error fetching facts", error: error.message });
   }
 };
-
-// --- Dog CRUD Logic ---
 
 export const getDogs = async (req, res) => {
   try {
