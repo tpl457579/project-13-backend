@@ -1,10 +1,10 @@
 import express from 'express'
 import { isAdmin } from '../../middlewares/adminAuth.js'
-import { getDogs, getDogById, getAllFacts, saveDog, deleteDog } from '../controllers/dogs.js'
+import { getDogs, getDogById, getDogFacts, saveDog, deleteDog } from '../controllers/dogs.js'
 
 const dogsRouter = express.Router()
 
-dogsRouter.get('/facts', getAllFacts)
+dogsRouter.get('/facts', getDogFacts)
 
 dogsRouter.get('/', getDogs)
 dogsRouter.get('/:id', getDogById)

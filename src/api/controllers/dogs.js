@@ -17,7 +17,7 @@ const normalizeTemperament = (input) => {
 
 // --- Dog Facts Logic ---
 
-export const getAllFacts = async (req, res) => {
+export const getDogFacts = async (req, res) => {
   try {
     // Accessing the raw collection via Mongoose connection
     const facts = await mongoose.connection.db.collection('dog_facts').find().toArray();

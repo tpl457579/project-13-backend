@@ -17,7 +17,7 @@ const normalizeTemperament = (input) => {
 
 // --- Cat Facts ---
 
-export const getAllFacts = async (req, res) => {
+export const getCatFacts = async (req, res) => {
   try {
     // Use the mongoose connection to access the collection directly
     const facts = await mongoose.connection.db.collection('cat_facts').find().toArray();

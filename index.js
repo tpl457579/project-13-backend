@@ -29,17 +29,24 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use('/api/v1/products', productsRouter)
 app.use('/api/v1/users', usersRouter)
 app.use('/api/v1/dogs', dogsRouter)
-app.use('api/v1/cats', catsRouter)
+app.use('/api/v1/cats', catsRouter)
 
-app.get('/api/facts', async (req, res) => {
-  const facts = await collection.find({}).toArray();
-  res.json(facts); // Sends the JSON array to your frontend
-});
 
 // Status Check
 app.get('/', (req, res) => {
   res.send('API is running...')
 })
+
+app.get('/dogs/facts', async (req, res) => {
+  const data = await db.collection('dog_facts').find({}).toArray(); 
+  res.json(data);
+});
+
+app.get('/cats/facts', async (req, res) => {
+  const data = await db.collection('cat_facts').find({}).toArray(); 
+  res.json(data);
+});
+
 
 // 404 Handler
 app.use((req, res) => {
@@ -55,7 +62,7 @@ app.use((err, req, res, next) => {
   })
 })
 
-const PORT = process.env.PORT || 5000 // Port 5000 is standard for many MERN tutorials
+const PORT = process.env.PORT || 3000 // Port 5000 is standard for many MERN tutorials
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
 })
