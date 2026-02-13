@@ -14,6 +14,16 @@ const normalizeTemperament = (input) => {
   return String(input).split(',').map(t => t.trim()).filter(Boolean);
 };
 
+
+export const getCats = async (req, res) => {
+  try {
+    const cats = await Cat.find().sort({ name: 1 }).lean();
+    res.json({ cats });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch cats' });
+  }
+};
+
 export const getCatFacts = async (req, res) => {
   try {
     const facts = await mongoose.connection.db.collection('cat_facts').find().toArray();
