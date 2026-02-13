@@ -1,11 +1,12 @@
 import express from 'express'
 // Keep the import, but we'll be careful with the usage below
 import { isAdmin } from '../../middlewares/adminAuth.js' 
-import { getCats, getCatById, saveCat, deleteCat } from '../controllers/cats.js'
+import { getCats, getAllFacts, getCatById, saveCat, deleteCat } from '../controllers/cats.js'
 
 const catsRouter = express.Router()
 
 // Public routes
+catsRouter.get('/facts', getAllFacts)
 catsRouter.get('/', getCats)
 catsRouter.get('/:id', getCatById)
 

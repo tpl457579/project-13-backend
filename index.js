@@ -28,6 +28,12 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use('/api/v1/products', productsRouter)
 app.use('/api/v1/users', usersRouter)
 app.use('/api/v1/dogs', dogsRouter)
+app.use('api/v1/cats', catsRouter)
+
+app.get('/api/facts', async (req, res) => {
+  const facts = await collection.find({}).toArray();
+  res.json(facts); // Sends the JSON array to your frontend
+});
 
 // Status Check
 app.get('/', (req, res) => {

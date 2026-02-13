@@ -1,4 +1,5 @@
-import Dog from '../models/dogs.js'
+import Dog from '../models/dogs.js';
+import mongoose from 'mongoose'; // Added to handle facts through Mongoose if needed
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
@@ -7,49 +8,53 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+// Helper: Standardize temperament array
 const normalizeTemperament = (input) => {
-  if (!input) return []
-  if (Array.isArray(input)) return input.map(t => t.trim()).filter(Boolean)
-  return String(input).split(',').map(t => t.trim()).filter(Boolean)
-}
+  if (!input) return [];
+  if (Array.isArray(input)) return input.map(t => t.trim()).filter(Boolean);
+  return String(input).split(',').map(t => t.trim()).filter(Boolean);
+};
 
-const ensureUnit = (value, unit) => {
-  if (!value) return ""
-  const str = String(value).trim()
-  if (str.toLowerCase().endsWith(unit.toLowerCase())) return str
-  return `${str} ${unit}`
-}
+// --- Dog Facts Logic ---
+
+export const getAllFacts = async (req, res) => {
+  try {
+    // Accessing the raw collection via Mongoose connection
+    const facts = await mongoose.connection.db.collection('dog_facts').find().toArray();
+    res.status(200).json(facts);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching facts", error: error.message });
+  }
+};
+
+// --- Dog CRUD Logic ---
 
 export const getDogs = async (req, res) => {
   try {
-    const dogs = await Dog.find().sort({ name: 1 }).lean()
-    res.json({ dogs })
+    const dogs = await Dog.find().sort({ name: 1 }).lean();
+    res.json({ dogs });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch dogs' })
+    res.status(500).json({ error: 'Failed to fetch dogs' });
   }
-}
-
+};
 
 export const saveDog = async (req, res) => {
   try {
     const { _id, publicId, name, weight, height, temperament, ...rest } = req.body;
 
-    const formattedTemperament = Array.isArray(temperament) 
-      ? temperament 
-      : String(temperament || '').split(',').map(t => t.trim()).filter(Boolean);
-
     const updateData = {
       ...rest,
       name: name?.trim(),
-      weight: weight?.toLowerCase().includes('kg') ? weight : `${weight} kg`,
-      height: height?.toLowerCase().includes('cm') ? height : `${height} cm`,
-      temperament: formattedTemperament,
+      weight: weight ? (weight.toLowerCase().includes('kg') ? weight : `${weight} kg`) : "",
+      height: height ? (height.toLowerCase().includes('cm') ? height : `${height} cm`) : "",
+      temperament: normalizeTemperament(temperament),
       publicId
     };
 
     if (_id) {
       const existingDog = await Dog.findById(_id);
       
+      // Cleanup old Cloudinary image if publicId changed
       if (existingDog && existingDog.publicId && existingDog.publicId !== publicId) {
         try {
           await cloudinary.uploader.destroy(existingDog.publicId);
@@ -72,17 +77,15 @@ export const saveDog = async (req, res) => {
   }
 };
 
-
 export const getDogById = async (req, res) => {
   try {
-    const dog = await Dog.findById(req.params.id)
-    if (!dog) return res.status(404).json({ error: 'Dog not found' })
-    res.json(dog)
+    const dog = await Dog.findById(req.params.id);
+    if (!dog) return res.status(404).json({ error: 'Dog not found' });
+    res.json(dog);
   } catch {
-    res.status(500).json({ error: 'Failed to fetch dog' })
+    res.status(500).json({ error: 'Failed to fetch dog' });
   }
-}
-
+};
 
 export const deleteDog = async (req, res) => {
   try {
