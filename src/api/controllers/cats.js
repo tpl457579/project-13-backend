@@ -49,9 +49,10 @@ export const saveCat = async (req, res) => {
   console.log("📥 Request body:", req.body)
 
   try {
-    const { _id, id, publicId, name, temperament, imageUrl, ...rest } = req.body
+ const { _id, id, imagePublicId, name, temperament, imageUrl, ...rest } = req.body
 
-    console.log("🔍 Extracted fields:", { _id, id, publicId, name, temperament, imageUrl, rest })
+
+    console.log("🔍 Extracted fields:", { _id, id, imagePublicId, name, temperament, imageUrl, rest })
 
     const updateData = {
       ...rest,
@@ -98,10 +99,11 @@ export const saveCat = async (req, res) => {
     if (existingCat) {
       console.log("✏️ Updating existing cat:", existingCat._id)
 
-      if (existingCat.publicId && existingCat.publicId !== publicId) {
-        console.log("🗑 Removing old Cloudinary image:", existingCat.publicId)
+    if (existingCat?.imagePublicId && existingCat.imagePublicId !== imagePublicId)
+ {
+        console.log("🗑 Removing old Cloudinary image:", existingCat.imagePublicId)
         try {
-          await cloudinary.uploader.destroy(existingCat.publicId)
+          await cloudinary.uploader.destroy(existingCat.imagePublicId)
         } catch (err) {
           console.log("⚠️ Cloudinary delete failed:", err.message)
         }
@@ -132,7 +134,7 @@ export const saveCat = async (req, res) => {
     const newCat = new Cat({
       ...updateData,
       id: id || new mongoose.Types.ObjectId().toString(),
-      publicId
+      imagePublicId
     })
 
     console.log("📦 newCat before save:", newCat)
@@ -167,8 +169,8 @@ export const deleteCat = async (req, res) => {
       return res.status(404).json({ message: 'Cat not found' })
     }
 
-    if (cat.publicId) {
-      await cloudinary.uploader.destroy(cat.publicId)
+    if (cat.imagePublicId) {
+      await cloudinary.uploader.destroy(cat.imagePublicId)
     }
 
     await Cat.findByIdAndDelete(id)
