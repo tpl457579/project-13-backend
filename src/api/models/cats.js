@@ -11,7 +11,7 @@ const catSchema = new mongoose.Schema({
   dogFriendly:String,
   energyLevel: String,
   grooming: String,
-  sheddingLevel: String,
+  shedding: String,
   strangerFriendly: String,
   lastUpdated: { type: Date, default: Date.now }
 });

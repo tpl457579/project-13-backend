@@ -45,8 +45,13 @@ export const getCatFacts = async (req, res) => {
 }
 
 export const saveCat = async (req, res) => {
+  console.log("🐱 --- SAVE CAT REQUEST RECEIVED ---")
+  console.log("📥 Request body:", req.body)
+
   try {
     const { _id, id, publicId, name, temperament, imageUrl, ...rest } = req.body
+
+    console.log("🔍 Extracted fields:", { _id, id, publicId, name, temperament, imageUrl, rest })
 
     const updateData = {
       ...rest,
@@ -58,28 +63,71 @@ export const saveCat = async (req, res) => {
       lastUpdated: Date.now()
     }
 
-    if (_id || id) {
-      const existingCat = await Cat.findOne({
-        $or: [
-          { _id: mongoose.isValidObjectId(_id) ? _id : null },
-          { id }
-        ]
-      })
+    console.log("🛠 updateData prepared:", updateData)
 
-      if (existingCat?.publicId && existingCat.publicId !== publicId) {
+    // -----------------------------
+    // 🔎 BUILD QUERY FOR EXISTING CAT
+    // -----------------------------
+    const query = []
+
+    if (_id && mongoose.isValidObjectId(_id)) {
+      console.log("🆔 Valid Mongo _id detected:", _id)
+      query.push({ _id })
+    } else {
+      console.log("⚠️ _id missing or invalid:", _id)
+    }
+
+    if (id) {
+      console.log("🆔 Custom id detected:", id)
+      query.push({ id })
+    } else {
+      console.log("⚠️ No custom id provided")
+    }
+
+    console.log("🔍 Final lookup query:", query)
+
+    const existingCat = query.length
+      ? await Cat.findOne({ $or: query })
+      : null
+
+    console.log("📌 existingCat found:", existingCat)
+
+    // -----------------------------
+    // 🔄 UPDATE EXISTING CAT
+    // -----------------------------
+    if (existingCat) {
+      console.log("✏️ Updating existing cat:", existingCat._id)
+
+      if (existingCat.publicId && existingCat.publicId !== publicId) {
+        console.log("🗑 Removing old Cloudinary image:", existingCat.publicId)
         try {
           await cloudinary.uploader.destroy(existingCat.publicId)
-        } catch {}
+        } catch (err) {
+          console.log("⚠️ Cloudinary delete failed:", err.message)
+        }
       }
 
+      const updateQuery = []
+
+      if (_id && mongoose.isValidObjectId(_id)) updateQuery.push({ _id })
+      if (id) updateQuery.push({ id })
+
+      console.log("🔧 updateQuery:", updateQuery)
+
       const updated = await Cat.findOneAndUpdate(
-        { $or: [{ _id }, { id }] },
+        { $or: updateQuery },
         updateData,
         { new: true, runValidators: true }
       )
 
+      console.log("✅ Updated cat:", updated)
       return res.status(200).json(updated)
     }
+
+    // -----------------------------
+    // ➕ CREATE NEW CAT
+    // -----------------------------
+    console.log("➕ Creating NEW cat")
 
     const newCat = new Cat({
       ...updateData,
@@ -87,9 +135,15 @@ export const saveCat = async (req, res) => {
       publicId
     })
 
+    console.log("📦 newCat before save:", newCat)
+
     await newCat.save()
+
+    console.log("🎉 NEW CAT SAVED:", newCat)
     res.status(201).json(newCat)
+
   } catch (error) {
+    console.log("❌ ERROR IN saveCat:", error)
     res.status(500).json({ error: error.message })
   }
 }
