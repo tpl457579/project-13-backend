@@ -14,13 +14,14 @@ export const isAdmin = async (req, res, next) => {
         next(); // Move to the controller
       } else {
         return res.status(403).json({ message: 'Forbidden: Admin access required' });
+        console.log("AUTH HEADER:", req.headers.authorization)
+console.log("USER AFTER AUTH:", req.user)
       }
     });
   } catch (error) {
     console.error("Admin Auth Middleware Error:", error);
     res.status(500).json({ message: "Internal Auth Error" });
-    console.log("AUTH HEADER:", req.headers.authorization)
-console.log("USER AFTER AUTH:", req.user)
+  
 
   }
 };
