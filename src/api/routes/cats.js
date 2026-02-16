@@ -4,13 +4,12 @@ import { getCats, getCatFacts, getCatById, saveCat, deleteCat } from '../control
 
 const catsRouter = express.Router()
 
-// Public routes
+
 catsRouter.get('/facts', getCatFacts)
 catsRouter.get('/', getCats)
 catsRouter.get('/:id', getCatById)
 
-// Protected routes 
-// TIP: If you get "Unauthorized" in the frontend, check the isAdmin middleware logic
+
 catsRouter.post('/save', isAdmin, saveCat) 
 catsRouter.delete('/:id', isAdmin, deleteCat)
 
