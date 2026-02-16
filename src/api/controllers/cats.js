@@ -49,8 +49,7 @@ export const saveCat = async (req, res) => {
   console.log("📥 Request body:", req.body)
 
   try {
- const { _id, id, imagePublicId, name, temperament, imageUrl, ...rest } = req.body
-
+    const { _id, id, imagePublicId, name, temperament, imageUrl, ...rest } = req.body
 
     console.log("🔍 Extracted fields:", { _id, id, imagePublicId, name, temperament, imageUrl, rest })
 
@@ -58,6 +57,7 @@ export const saveCat = async (req, res) => {
       ...rest,
       name: name?.trim(),
       imageUrl,
+      imagePublicId,
       temperament: Array.isArray(temperament)
         ? temperament.join(', ')
         : temperament,
@@ -66,23 +66,16 @@ export const saveCat = async (req, res) => {
 
     console.log("🛠 updateData prepared:", updateData)
 
-    // -----------------------------
-    // 🔎 BUILD QUERY FOR EXISTING CAT
-    // -----------------------------
     const query = []
 
     if (_id && mongoose.isValidObjectId(_id)) {
       console.log("🆔 Valid Mongo _id detected:", _id)
       query.push({ _id })
-    } else {
-      console.log("⚠️ _id missing or invalid:", _id)
     }
 
-    if (id) {
+    if (id && id.trim() !== '') {
       console.log("🆔 Custom id detected:", id)
       query.push({ id })
-    } else {
-      console.log("⚠️ No custom id provided")
     }
 
     console.log("🔍 Final lookup query:", query)
@@ -93,14 +86,10 @@ export const saveCat = async (req, res) => {
 
     console.log("📌 existingCat found:", existingCat)
 
-    // -----------------------------
-    // 🔄 UPDATE EXISTING CAT
-    // -----------------------------
     if (existingCat) {
       console.log("✏️ Updating existing cat:", existingCat._id)
 
-    if (existingCat?.imagePublicId && existingCat.imagePublicId !== imagePublicId)
- {
+      if (existingCat?.imagePublicId && existingCat.imagePublicId !== imagePublicId) {
         console.log("🗑 Removing old Cloudinary image:", existingCat.imagePublicId)
         try {
           await cloudinary.uploader.destroy(existingCat.imagePublicId)
@@ -112,7 +101,7 @@ export const saveCat = async (req, res) => {
       const updateQuery = []
 
       if (_id && mongoose.isValidObjectId(_id)) updateQuery.push({ _id })
-      if (id) updateQuery.push({ id })
+      if (id && id.trim() !== '') updateQuery.push({ id })
 
       console.log("🔧 updateQuery:", updateQuery)
 
@@ -126,9 +115,6 @@ export const saveCat = async (req, res) => {
       return res.status(200).json(updated)
     }
 
-    // -----------------------------
-    // ➕ CREATE NEW CAT
-    // -----------------------------
     console.log("➕ Creating NEW cat")
 
     const newCat = new Cat({

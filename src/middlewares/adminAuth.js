@@ -19,5 +19,8 @@ export const isAdmin = async (req, res, next) => {
   } catch (error) {
     console.error("Admin Auth Middleware Error:", error);
     res.status(500).json({ message: "Internal Auth Error" });
+    console.log("AUTH HEADER:", req.headers.authorization)
+console.log("USER AFTER AUTH:", req.user)
+
   }
 };
