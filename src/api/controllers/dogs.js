@@ -25,15 +25,22 @@ export const getDogFacts = async (req, res) => {
 
 export const getDogs = async (req, res) => {
   try {
+    console.log('🔍 Fetching dogs from database...');
     const dogs = await Dog.find().sort({ name: 1 }).lean();
+    console.log('📊 Found dogs:', dogs.length);
+    console.log('🐕 First dog:', dogs[0]); // See what a dog looks like
     res.json({ dogs });
   } catch (err) {
+    console.error('❌ Error in getDogs:', err);
     res.status(500).json({ error: 'Failed to fetch dogs' });
   }
 };
 
+
 export const saveDog = async (req, res) => {
   try {
+    console.log('📝 Saving dog, body:', req.body); // Add this
+    
     const { _id, publicId, name, weight, height, temperament, ...rest } = req.body;
 
     const updateData = {
@@ -45,10 +52,12 @@ export const saveDog = async (req, res) => {
       publicId
     };
 
+    console.log('📊 Update data:', updateData); // Add this
+
     if (_id) {
+      console.log('✏️ Updating existing dog:', _id); // Add this
       const existingDog = await Dog.findById(_id);
       
-      // Cleanup old Cloudinary image if publicId changed
       if (existingDog && existingDog.publicId && existingDog.publicId !== publicId) {
         try {
           await cloudinary.uploader.destroy(existingDog.publicId);
@@ -58,15 +67,18 @@ export const saveDog = async (req, res) => {
       }
 
       const updatedDog = await Dog.findByIdAndUpdate(_id, updateData, { new: true });
+      console.log('✅ Dog updated:', updatedDog); // Add this
       return res.status(200).json(updatedDog);
     }
 
+    console.log('➕ Creating new dog'); // Add this
     const newDog = new Dog(updateData);
     await newDog.save();
+    console.log('✅ Dog created:', newDog); // Add this
     res.status(201).json(newDog);
 
   } catch (error) {
-    console.error("Save Dog Error:", error);
+    console.error("❌ Save Dog Error:", error);
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };

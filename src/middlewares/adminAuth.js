@@ -1,9 +1,11 @@
 import { isAuth } from './auth.js';
 
 export const isAdmin = async (req, res, next) => {
-  // Wrap isAuth in a way that respects the Express flow
   try {
     await isAuth(req, res, () => {
+      console.log("🔑 AUTH HEADER:", req.headers.authorization); // Move up!
+      console.log("👤 USER AFTER AUTH:", req.user); // Move up!
+      
       // Check if isAuth successfully identified a user
       if (!req.user) {
         return res.status(401).json({ message: 'Unauthorized: Please log in' });
@@ -14,14 +16,10 @@ export const isAdmin = async (req, res, next) => {
         next(); // Move to the controller
       } else {
         return res.status(403).json({ message: 'Forbidden: Admin access required' });
-        console.log("AUTH HEADER:", req.headers.authorization)
-console.log("USER AFTER AUTH:", req.user)
       }
     });
   } catch (error) {
-    console.error("Admin Auth Middleware Error:", error);
+    console.error("❌ Admin Auth Middleware Error:", error);
     res.status(500).json({ message: "Internal Auth Error" });
-  
-
   }
 };
