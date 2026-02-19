@@ -2,7 +2,7 @@
 
 - clone github repository - https://github.com/tpl457579/project-13-backend
 - npm init -y (to install dependencies)
-- npm run start
+- node index.js (to start server)
 
 # Backend Specifics
 

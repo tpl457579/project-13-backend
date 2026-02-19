@@ -10,10 +10,8 @@ import catsRouter from './src/api/routes/cats.js'
 
 const app = express()
 
-// Connect to MongoDB BEFORE starting the server
 await connectDB()
 
-// Middleware
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
   credentials: true
