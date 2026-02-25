@@ -6,7 +6,7 @@
 
 # Backend Specifics
 
-- Deployment Url - https://project-13-backend-1sra.onrender.com/
+- Deployment Url - https://project-13-backend-1.onrender.com/
 
 ### Endpoints
 
@@ -16,7 +16,13 @@
 | `GET` | `/api/dogs/:id` | Retrieves a specific dog by ID. | Public |
 | `POST` | `/api/dogs/save` | Creates or updates a dog entry. | Admin |
 | `DELETE` | `/api/dogs/:id` | Removes a dog entry. | Admin |
-| `POST` | `/api/products/fetch-metadata` | Scrapes details from external URLs. | Public |
+| `GET` | `/api/facts` | Retrieves all dog facts. | Public |
+| `GET` | `/api/cats` | Retrieves all cat listings. | Public |
+| `GET` | `/api/cats/:id` | Retrieves a specific cat by ID. | Public |
+| `POST` | `/api/cats/save` | Creates or updates a cat entry. | Admin |
+| `DELETE` | `/api/cats/:id` | Removes a cat entry. | Admin |
+| `GET` | `/api/facts` | Retrieves all cat facts. | Public |
+| `POST` | `/api/products/fetch-metadata` | Scrapes details from external URLs. | Admin |
 | `GET` | `/api/products` | Lists all inventory products. | Public |
 | `GET` | `/api/products/:id` | Fetches details for a single product. | Public |
 | `POST` | `/api/products/save` | Adds a new product to the database. | Auth + Admin |

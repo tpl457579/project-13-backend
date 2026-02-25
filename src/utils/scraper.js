@@ -6,10 +6,10 @@ import { cloudinary } from '../middlewares/file.js'
 import * as cheerio from 'cheerio'
 
 export const scrapeProducts = async () => {
-  console.log('🚀 Scrape started...')
+  console.log('Scrape started...')
 
   await mongoose.connect(process.env.MONGO_URI)
-  console.log('✅ Connected to MongoDB')
+  console.log('Connected to MongoDB')
 
   const browser = await puppeteer.launch({ headless: true })
   const page = await browser.newPage()
@@ -24,32 +24,31 @@ export const scrapeProducts = async () => {
     
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 })
 
-    // Check if we hit a Bot Block
     const pageTitle = await page.title()
-    console.log(`📄 Page Title: "${pageTitle}"`)
+    console.log(`Page Title: "${pageTitle}"`)
     if (pageTitle.includes('Robot Check')) {
-      console.error('❌ BLOCKED: Amazon is showing a CAPTCHA/Robot Check page.')
+      console.error('BLOCKED: Amazon is showing a CAPTCHA/Robot Check page.')
     }
 
     try {
       const cookieButton = '#sp-cc-accept'; 
       await page.waitForSelector(cookieButton, { timeout: 5000 });
       await page.click(cookieButton);
-      console.log('🍪 Amazon cookie banner cleared');
+      console.log('Amazon cookie banner cleared');
     } catch {
-      console.log('ℹ️ No cookie banner found (or already cleared)');
+      console.log('ℹNo cookie banner found (or already cleared)');
     }
 
     await new Promise(r => setTimeout(r, 2000));
 
     const html = await page.content()
-    console.log(`📊 HTML Content Length: ${html.length} bytes`)
+    console.log(`HTML Content Length: ${html.length} bytes`)
     
     const $ = cheerio.load(html)
     const products = []
 
     const searchResults = $('div[data-component-type="s-search-result"]')
-    console.log(`🔎 Found ${searchResults.length} search result containers on page`)
+    console.log(`Found ${searchResults.length} search result containers on page`)
 
     searchResults.each((_, el) => {
       const asin = $(el).attr('data-asin')
@@ -81,7 +80,7 @@ export const scrapeProducts = async () => {
       })
     });
 
-    console.log(`📦 Processed ${products.length} products. Starting Database/Cloudinary sync...`)
+    console.log(`Processed ${products.length} products. Starting Database/Cloudinary sync...`)
 
     for (const p of products) {
       try {
@@ -115,16 +114,16 @@ export const scrapeProducts = async () => {
         })
 
         await productDoc.save()
-        console.log(`✅ Saved new product: ${p.asin}`)
+        console.log(`Saved new product: ${p.asin}`)
       } catch (err) {
-        console.error(`⚠️ Error saving ${p.asin}:`, err.message)
+        console.error(`Error saving ${p.asin}:`, err.message)
       }
     }
   } catch (err) {
-    console.error('🚨 Scrape error:', err.message)
+    console.error('Scrape error:', err.message)
   } finally {
     await browser.close()
-    console.log('🏁 Scrape finished, Browser closed')
+    console.log('Scrape finished, Browser closed')
   }
 }
 

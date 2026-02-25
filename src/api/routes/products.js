@@ -11,7 +11,7 @@ import {
 
 const productsRouter = express.Router()
 
-productsRouter.post('/fetch-metadata', fetchMetadata)
+productsRouter.post('/fetch-metadata', isAdmin, fetchMetadata)
 
 productsRouter.get('/', getProducts)
 productsRouter.get('/:id', getProductById)
