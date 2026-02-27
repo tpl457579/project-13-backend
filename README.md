@@ -8,6 +8,49 @@
 
 - Deployment Url - https://project-13-backend-1.onrender.com/
 
+### File Structure
+
+* [src/](.\project-13-backend\src)
+  * [api/](.\project-13-backend\src\api)
+    * [controllers/](.\project-13-backend\src\api\controllers)
+      * [cats.js](.\project-13-backend\src\api\controllers\cats.js)
+      * [dogs.js](.\project-13-backend\src\api\controllers\dogs.js)
+      * [products.js](.\project-13-backend\src\api\controllers\products.js)
+      * [users.js](.\project-13-backend\src\api\controllers\users.js)
+    * [models/](.\project-13-backend\src\api\models)
+      * [catFacts.js](.\project-13-backend\src\api\models\catFacts.js)
+      * [cats.js](.\project-13-backend\src\api\models\cats.js)
+      * [dogFacts.js](.\project-13-backend\src\api\models\dogFacts.js)
+      * [dogs.js](.\project-13-backend\src\api\models\dogs.js)
+      * [products.js](.\project-13-backend\src\api\models\products.js)
+      * [users.js](.\project-13-backend\src\api\models\users.js)
+    * [routes/](.\project-13-backend\src\api\routes)
+      * [cats.js](.\project-13-backend\src\api\routes\cats.js)
+      * [dogs.js](.\project-13-backend\src\api\routes\dogs.js)
+      * [products.js](.\project-13-backend\src\api\routes\products.js)
+      * [users.js](.\project-13-backend\src\api\routes\users.js)
+  * [config/](.\project-13-backend\src\config)
+    * [db.js](.\project-13-backend\src\config\db.js)
+  * [middlewares/](.\project-13-backend\src\middlewares)
+    * [adminAuth.js](.\project-13-backend\src\middlewares\adminAuth.js)
+    * [auth.js](.\project-13-backend\src\middlewares\auth.js)
+    * [file.js](.\project-13-backend\src\middlewares\file.js)
+  * [utils/](.\project-13-backend\src\utils)
+    * [cleanup.js](.\project-13-backend\src\utils\cleanup.js)
+    * [cloudinaryHelper.js](.\project-13-backend\src\utils\cloudinaryHelper.js)
+    * [createAdmin.js](.\project-13-backend\src\utils\createAdmin.js)
+    * [cron.js](.\project-13-backend\src\utils\cron.js)
+    * [jwt.js](.\project-13-backend\src\utils\jwt.js)
+    * [scraper.js](.\project-13-backend\src\utils\scraper.js)
+    * [uploadToCloudinary.js](.\project-13-backend\src\utils\uploadToCloudinary.js)
+* [.env](.\project-13-backend\.env)
+* [.gitignore](.\project-13-backend\.gitignore)
+* [index.html](.\project-13-backend\index.html)
+* [index.js](.\project-13-backend\index.js)
+* [package-lock.json](.\project-13-backend\package-lock.json)
+* [package.json](.\project-13-backend\package.json)
+* [README.md](.\project-13-backend\README.md)
+
 ### Endpoints
 
 | Method | Endpoint | Description | Access |
