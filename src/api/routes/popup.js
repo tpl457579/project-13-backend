@@ -1,5 +1,7 @@
 import express from 'express'
 
+const popupRouter = express.Router()
+
 popupRouter.get('/services', async (req, res) => {
     console.log('HIT /services route', req.query)
   const { lat, lng, type } = req.query
