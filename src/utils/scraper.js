@@ -4,6 +4,8 @@ import mongoose from 'mongoose'
 import Product from '../api/models/products.js'
 import { cloudinary } from '../middlewares/file.js'
 import * as cheerio from 'cheerio'
+import fs from 'fs'
+import path from 'path'
 
 export const scrapeProducts = async () => {
   console.log('Scrape started...')
@@ -81,6 +83,25 @@ export const scrapeProducts = async () => {
     });
 
     console.log(`Processed ${products.length} products. Starting Database/Cloudinary sync...`)
+
+    const csvHeaders = 'asin,name,productUrl,imageUrl,rating,price,priceWhole,priceFraction\n'
+const csvRows = products.map(p =>
+  [
+    p.asin,
+    `"${p.name.replace(/"/g, '""')}"`,
+    p.productUrl,
+    p.imageUrl,
+    p.rating ?? '',
+    p.price,
+    p.priceWhole,
+    p.priceFraction
+  ].join(',')
+).join('\n')
+
+const csvPath = path.resolve('seeds/products.csv')
+fs.mkdirSync(path.dirname(csvPath), { recursive: true })
+fs.writeFileSync(csvPath, csvHeaders + csvRows, 'utf-8')
+console.log(`CSV seed written to ${csvPath} with ${products.length} rows`)
 
     for (const p of products) {
       try {
