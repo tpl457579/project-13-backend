@@ -7,6 +7,7 @@ import productsRouter from './src/api/routes/products.js'
 import usersRouter from './src/api/routes/users.js'
 import dogsRouter from './src/api/routes/dogs.js'
 import catsRouter from './src/api/routes/cats.js'
+import popupRouter from './src/api/routes/popup.js'
 
 const app = express()
 
@@ -20,10 +21,14 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
+
+
 app.use('/api/v1/products', productsRouter)
 app.use('/api/v1/users', usersRouter)
 app.use('/api/v1/dogs', dogsRouter)
 app.use('/api/v1/cats', catsRouter)
+app.use('/api/v1/popup', popupRouter)
+
 
 app.get('/', (req, res) => {
   res.send('API is running...')
